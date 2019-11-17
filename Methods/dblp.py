@@ -11,9 +11,9 @@ from contextlib import redirect_stdout
 ######## Definitions
 seed = 7
 epoch = 10
-back_propagation_batch_size = 8
+back_propagation_batch_size = 128
 k_fold = 10
-training_batch_size = 300
+training_batch_size = 1000
 data_size_limit = 1000
 train_ratio = 0.7
 validation_ratio = 0.15
@@ -55,6 +55,7 @@ fold_counter = 1
 for train_index, test_index in cv.split(x):
     print('Fold number {}'.format(fold_counter))
     x_train, x_test, y_train, y_test = x[train_index], x[test_index], y[train_index], y[test_index]
+    print('Train Size: {} Test Size: {}'.format(x_train.__len__(), x_test.__len__()))
     # this is the size of our encoded representations
     # encoder_hidden_layer_dim = 3675  # encoder first hidden layer
     # encoder_hidden_layer_dim_2 = 4200  # encoder second hidden layer
