@@ -102,15 +102,15 @@ venv.bak/
 
 # mypy
 .mypy_cache/
-/Dataset/2HopCoverDist_69385_1000.0_G1.txt
-/Dataset/dataset.pkl
-/Dataset/dblp.csv
-/Dataset/dblp.pkl
-/Dataset/dblp.txt
+
+# For Data files: ignore everythong but keep the strcuture. (gitkeep file is used to keep the structure)
+# exclude everything
+/Dataset/*
+# exception to the rule
+!Dataset/.gitkeep
 
 # For output files: ignore everythong but keep the strcuture. (gitkeep file is used to keep the structure)
 # exclude everything
 /Output/*
 # exception to the rule
 !Output/.gitkeep
-
