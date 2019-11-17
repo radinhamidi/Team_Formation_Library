@@ -10,7 +10,7 @@ from contextlib import redirect_stdout
 
 ######## Definitions
 seed = 7
-epoch = 20
+epoch = 10
 back_propagation_batch_size = 8
 k_fold = 10
 training_batch_size = 300
