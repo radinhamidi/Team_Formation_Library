@@ -145,7 +145,6 @@ for train_index, test_index in cv.split(x):
 # for test_instance in x_test:
 #     result = autoencoder.predict(test_instance)
 
-
 # saving model
 save_model_q = input('Save the models? (y/n)')
 if save_model_q.lower() == 'y':

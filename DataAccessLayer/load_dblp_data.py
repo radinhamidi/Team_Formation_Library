@@ -135,14 +135,14 @@ def load_authors(dir):
     return authors.values, nameIDs.values
 
 
-def convert_to_pkl(txt_dir='../Dataset/dblp.txt', pkl_dir='../Dataset/dblp.pkl', ftype='dict'):
+def convert_to_pkl(txt_dir='./Dataset/dblp.txt', pkl_dir='./Dataset/dblp.pkl', ftype='dict'):
     load_dblp_arnet(txt_dir, pkl_dir, ftype=ftype)
 
 
 # dblp to sparse matrix: output: pickle file of the sparse matrix
-def extract_data(filter_journals=False, size_limit=np.inf, source_dir='../Dataset/dblp.pkl',
-                 skill_dir='../Dataset/invertedTermCount.txt',
-                 author_dir='../Dataset/authorNameId.txt', output_dir='../Dataset/ae_dataset.pkl'):
+def extract_data(filter_journals=False, size_limit=np.inf, source_dir='./Dataset/dblp.pkl',
+                 skill_dir='./Dataset/invertedTermCount.txt',
+                 author_dir='./Dataset/authorNameId.txt', output_dir='./Dataset/ae_dataset.pkl'):
 
     data = load_citation_pkl(source_dir)
     skills, skills_freq = load_skills(skill_dir)
@@ -180,14 +180,14 @@ def extract_data(filter_journals=False, size_limit=np.inf, source_dir='../Datase
         print('{} records saved to {} successfully.'.format(counter+1, output_dir))
 
 
-def load_ae_dataset(dir='../Dataset/ae_dataset.pkl'):
+def load_ae_dataset(dir='./Dataset/ae_dataset.pkl'):
     with open(dir, 'rb') as f:
         dataset = pickle.load(f)
     return dataset
 
 
 # we should check if we have the proper dataset for ae or not. and if not then we run extract_data function
-def ae_data_exist(file_path='../Dataset/ae_dataset.pkl'):
+def ae_data_exist(file_path='./Dataset/ae_dataset.pkl'):
     if path.exists(file_path):
         return True
     else:
