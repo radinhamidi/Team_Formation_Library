@@ -107,3 +107,10 @@ venv.bak/
 /Dataset/dblp.csv
 /Dataset/dblp.pkl
 /Dataset/dblp.txt
+
+# exclude everything
+/Output/*
+
+# exception to the rule
+!Output/.gitkeep
+
