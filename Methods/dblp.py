@@ -132,9 +132,10 @@ if save_model_q == 'y':
     #     json_file.write(encoder_model_json)
     # with open('./Models/{}.json'.format(decoder_name), "w") as json_file:
     #     json_file.write(decoder_model_json)
-    with open('./Models/{}.json'.format(autoencoder_name), "w") as json_file:
+    with open('../Output/Models/{}.json'.format(autoencoder_name), "w") as json_file:
         json_file.write(autoencoder_model_json)
 
     # encoder.save_weights("./Models/weights/{}.h5".format(encoder_name))
     # decoder.save_weights("./Models/weights/{}.h5".format(decoder_name))
-    autoencoder.save_weights("./Models/weights/{}.h5".format(autoencoder_name))
+    autoencoder.save_weights("../Output/Models/weights/{}.h5".format(autoencoder_name))
+
