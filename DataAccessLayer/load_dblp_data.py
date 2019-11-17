@@ -39,12 +39,12 @@ currentArticle.venue.toLowerCase().contains("sigmod") ||
 //                                currentArticle.venue.toLowerCase().contains("theory") ||
 '''
 
-def convert_to_pkl(txt_dir = './Dataset/dblp.txt', pkl_dir='./Dataset/dblp.pkl', ftype='dict'):
+def convert_to_pkl(txt_dir = '../Dataset/dblp.txt', pkl_dir='../Dataset/dblp.pkl', ftype='dict'):
     load_dblp_arnet(txt_dir, pkl_dir, ftype=ftype)
 
 # dblp to sparse matrix: output: pickle file of the sparse matrix
-def extract_data(filter_journals = False, size_limit = np.inf, pkl_dir='./Dataset/dblp.pkl', skill_dir= './Dataset/invertedTermCount.txt',
-                 author_dir= './Dataset/authorNameId.txt', output_dir='./Dataset/dataset.pkl'):
+def extract_data(filter_journals = False, size_limit = np.inf, pkl_dir='../Dataset/dblp.pkl', skill_dir= '../Dataset/invertedTermCount.txt',
+                 author_dir= '../Dataset/authorNameId.txt', output_dir='../Dataset/dataset.pkl'):
     data = load_citation_pkl(pkl_dir)
 
     skills, skills_freq = load_skills(skill_dir)
@@ -88,7 +88,7 @@ def extract_data(filter_journals = False, size_limit = np.inf, pkl_dir='./Datase
     with open(output_dir, 'wb') as f:
         pickle.dump(dataset, f)
 
-def load_ae_dataset(dir='./Dataset/dataset.pkl'):
+def load_ae_dataset(dir='../Dataset/dataset.pkl'):
     with open(dir, 'rb') as f:
         dataset = pickle.load(f)
     return dataset
