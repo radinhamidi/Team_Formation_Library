@@ -113,4 +113,7 @@ venv.bak/
 # exclude everything
 /Output/*
 # exception to the rule
-!Output/*/.gitkeep
+!Output/.gitkeep
+!Output/Figures/.gitkeep
+!Output/Models/.gitkeep
+!Output/Models/Weights/.gitkeep

@@ -167,7 +167,7 @@ if save_model_q.lower() == 'y':
 
     # encoder.save_weights("./Models/weights/{}.h5".format(encoder_name))
     # decoder.save_weights("./Models/weights/{}.h5".format(decoder_name))
-    autoencoder.save_weights("../Output/Models/weights/{}.h5".format(model_name))
+    autoencoder.save_weights("../Output/Models/Weights/{}.h5".format(model_name))
 
     with open('../Output/Models/{}_Time{}_ACC{}_Loss{}_Epoch{}_kFold{}_BatchBP{}_BatchTraining{}.txt'
                       .format(model_name, time_str, 0, int(np.mean(cvscores) * 1000), epoch, k_fold,
