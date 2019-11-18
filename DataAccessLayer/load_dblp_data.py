@@ -207,5 +207,5 @@ def filter_pubs(venue: str):
 def batch_generator(iterable, n=10):
     l = len(iterable)
     for ndx in range(0, l, n):
-        len = min(ndx + n, l) - ndx
-        yield np.asarray([record.todense() for record in iterable[ndx:min(ndx + n, l)]]).reshape(len, -1)
+        batch_length = min(ndx + n, l) - ndx
+        yield np.asarray([record.todense() for record in iterable[ndx:min(ndx + n, l)]]).reshape(batch_length, -1)
