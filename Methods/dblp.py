@@ -163,20 +163,20 @@ if save_model_q.lower() == 'y':
     #     json_file.write(encoder_model_json)
     # with open('./Models/{}.json'.format(decoder_name), "w") as json_file:
     #     json_file.write(decoder_model_json)
-    with open('./Output/Models/{}.json'.format(model_name), "w") as json_file:
+    with open('../Output/Models/{}.json'.format(model_name), "w") as json_file:
         json_file.write(model_json)
 
     # encoder.save_weights("./Models/weights/{}.h5".format(encoder_name))
     # decoder.save_weights("./Models/weights/{}.h5".format(decoder_name))
-    autoencoder.save_weights("./Output/Models/Weights/{}.h5".format(model_name))
+    autoencoder.save_weights("../Output/Models/Weights/{}.h5".format(model_name))
 
-    with open('./Output/Models/{}_Time{}_ACC{}_Loss{}_Epoch{}_kFold{}_BatchBP{}_BatchTraining{}.txt'
+    with open('../Output/Models/{}_Time{}_ACC{}_Loss{}_Epoch{}_kFold{}_BatchBP{}_BatchTraining{}.txt'
                       .format(model_name, time_str, 0, int(np.mean(cvscores) * 1000), epoch, k_fold,
                               back_propagation_batch_size, training_batch_size), 'w') as f:
         with redirect_stdout(f):
             autoencoder.summary()
 
-    plot_model(autoencoder, './Output/Models/{}_Time{}_ACC{}_Loss{}_Epoch{}_kFold{}_BatchBP{}_BatchTraining{}.png'
+    plot_model(autoencoder, '../Output/Models/{}_Time{}_ACC{}_Loss{}_Epoch{}_kFold{}_BatchBP{}_BatchTraining{}.png'
                .format(model_name, time_str, 0, int(np.mean(cvscores) * 1000), epoch, k_fold,
                        back_propagation_batch_size, training_batch_size))
     print('Model and its summary saved.')
