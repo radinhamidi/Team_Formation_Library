@@ -138,8 +138,9 @@ for train_index, test_index in cv.split(x):
         # print('Total loss of model is: {0:.4f}'.format(lose))
         # Cool down GPU
         # time.sleep(300)
-    score = autoencoder.evaluate([x_test_record.todense() for x_test_record in x_test],
-                                 [y_test_record.todense() for y_test_record in y_test], verbose=2)
+    score = autoencoder.evaluate(np.asarray([x_test_record.todense() for x_test_record in x_test]).reshape(x_test.__len__(), -1),
+                                 np.asarray([y_test_record.todense() for y_test_record in y_test]).reshape(y_test.__len__(), -1),
+                                 verbose=2)
     print('Test loss of fold {}: {}'.format(fold_counter, score))
     cvscores.append(score)
     fold_counter += 1
