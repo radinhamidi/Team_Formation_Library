@@ -1,4 +1,5 @@
 import DataAccessLayer.load_dblp_data as dblp
+import Evaluation.Evaluator as dblp_eval
 from keras.layers import Input, Dense
 from keras.models import Model
 from keras import backend as K
@@ -13,6 +14,7 @@ seed = 7
 epoch = 10
 back_propagation_batch_size = 64
 k_fold = 10
+evaluation_k_set = np.arange(10, 100, 10)
 training_batch_size = 6000
 data_size_limit = 1000
 train_ratio = 0.7
@@ -52,7 +54,15 @@ y = np.asarray(y)
 cv = KFold(n_splits=k_fold, random_state=seed, shuffle=True)
 cvscores = []
 
+# Defining evaluation scores holders
+p_at_k_all = dblp_eval.init_eval_holder(evaluation_k_set) # all p@k of instances in one fold and one k_evaluation_set
+p_at_k_overall = dblp_eval.init_eval_holder(evaluation_k_set) # overall p@k of instances in one fold and one k_evaluation_set
+r_at_k_all = dblp_eval.init_eval_holder(evaluation_k_set) # all r@k of instances in one fold and one k_evaluation_set
+r_at_k_overall = dblp_eval.init_eval_holder(evaluation_k_set) # overall r@k of instances in one fold and one k_evaluation_set
+
+
 fold_counter = 1
+time_str = time.strftime("%Y%m%d-%H%M%S")
 for train_index, test_index in cv.split(x):
     print('Fold number {}'.format(fold_counter))
     x_train, x_test, y_train, y_test = x[train_index], x[test_index], y[train_index], y[test_index]
@@ -138,46 +148,69 @@ for train_index, test_index in cv.split(x):
         # print('Total loss of model is: {0:.4f}'.format(lose))
         # Cool down GPU
         # time.sleep(300)
-    score = autoencoder.evaluate(np.asarray([x_test_record.todense() for x_test_record in x_test]).reshape(x_test.__len__(), -1),
-                                 np.asarray([y_test_record.todense() for y_test_record in y_test]).reshape(y_test.__len__(), -1),
-                                 verbose=2)
+    score = autoencoder.evaluate(
+        np.asarray([x_test_record.todense() for x_test_record in x_test]).reshape(x_test.__len__(), -1),
+        np.asarray([y_test_record.todense() for y_test_record in y_test]).reshape(y_test.__len__(), -1),
+        verbose=2)
     print('Test loss of fold {}: {}'.format(fold_counter, score))
     cvscores.append(score)
-    fold_counter += 1
 
-# for test_instance in x_test:
-#     result = autoencoder.predict(test_instance)
+    # @k evaluation process
+    for k in evaluation_k_set:
+        # p@k evaluation
+        print("Evaluating p@k for top {} records in fold {}.".format(k, fold_counter))
+        p_at_k, p_at_k_array = dblp_eval.p_at_k(autoencoder.predict(
+            np.asarray([x_test_record.todense() for x_test_record in x_test]).reshape(x_test.__len__(), -1)),
+            np.asarray([y_test_record.todense() for y_test_record in y_test]).reshape(y_test.__len__(), -1), k=k)
+        p_at_k_all[k].append(p_at_k)
+        p_at_k_overall[k].append(p_at_k_array)
+        # r@k evaluation
+        print("Evaluating r@k for top {} records in fold {}.".format(k, fold_counter))
+        r_at_k, r_at_k_array = dblp_eval.r_at_k(autoencoder.predict(
+            np.asarray([x_test_record.todense() for x_test_record in x_test]).reshape(x_test.__len__(), -1)),
+            np.asarray([y_test_record.todense() for y_test_record in y_test]).reshape(y_test.__len__(), -1), k=k)
+        r_at_k_all[k].append(r_at_k)
+        r_at_k_overall[k].append(r_at_k_array)
 
-# saving model
-save_model_q = input('Save the models? (y/n)')
-if save_model_q.lower() == 'y':
-    time_str = time.strftime("%Y%m%d-%H%M%S")
+    # for test_instance in x_test:
+    #     result = autoencoder.predict(test_instance)
+
+    # saving model
+    # save_model_q = input('Save the models? (y/n)')
+    # if save_model_q.lower() == 'y':
     # encoder_model_json = encoder.to_json()
     # decoder_model_json = decoder.to_json()
     model_json = autoencoder.to_json()
 
     # encoder_name = input('Please enter encoder model name:')
     # decoder_name = input('Please enter decoder model name:')
-    model_name = input('Please enter autoencoder model name:')
+    # model_name = input('Please enter autoencoder model name:')
 
     # with open('./Models/{}.json'.format(encoder_name), "w") as json_file:
     #     json_file.write(encoder_model_json)
     # with open('./Models/{}.json'.format(decoder_name), "w") as json_file:
     #     json_file.write(decoder_model_json)
-    with open('../Output/Models/{}.json'.format(model_name), "w") as json_file:
+    with open('../Output/Models/T{}_Fold{}.json'.format(time_str, fold_counter), "w") as json_file:
         json_file.write(model_json)
 
     # encoder.save_weights("./Models/weights/{}.h5".format(encoder_name))
     # decoder.save_weights("./Models/weights/{}.h5".format(decoder_name))
-    autoencoder.save_weights("../Output/Models/Weights/{}.h5".format(model_name))
+    autoencoder.save_weights("../Output/Models/Weights/T{}_Fold{}.h5".format(time_str, fold_counter))
 
-    with open('../Output/Models/{}_Time{}_ACC{}_Loss{}_Epoch{}_kFold{}_BatchBP{}_BatchTraining{}.txt'
-                      .format(model_name, time_str, 0, int(np.mean(cvscores) * 1000), epoch, k_fold,
+    with open('../Output/Models/T{}_Fold{}_Loss{}_Epoch{}_kFold{}_BatchBP{}_BatchTraining{}.txt'
+                      .format(time_str, fold_counter, int(np.mean(cvscores) * 1000), epoch, k_fold,
                               back_propagation_batch_size, training_batch_size), 'w') as f:
         with redirect_stdout(f):
             autoencoder.summary()
 
-    plot_model(autoencoder, '../Output/Models/{}_Time{}_ACC{}_Loss{}_Epoch{}_kFold{}_BatchBP{}_BatchTraining{}.png'
-               .format(model_name, time_str, 0, int(np.mean(cvscores) * 1000), epoch, k_fold,
+    plot_model(autoencoder, '../Output/Models/Time{}_Fold{}_Loss{}_Epoch{}_kFold{}_BatchBP{}_BatchTraining{}.png'
+               .format(time_str, fold_counter, int(np.mean(cvscores) * 1000), epoch, k_fold,
                        back_propagation_batch_size, training_batch_size))
-    print('Model and its summary saved.')
+    print('Model and its summary and architecture plot saved.')
+
+    dblp_eval.save_record(p_at_k_all, 'p@k_all_{}'.format(time_str))
+    dblp_eval.save_record(p_at_k_overall, 'p@k_{}'.format(time_str))
+    dblp_eval.save_record(r_at_k_all, 'r@k_all_{}'.format(time_str))
+    dblp_eval.save_record(p_at_k_overall, 'r@k_{}'.format(time_str))
+
+    fold_counter += 1
