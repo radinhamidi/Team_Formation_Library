@@ -11,9 +11,9 @@ from contextlib import redirect_stdout
 ######## Definitions
 seed = 7
 epoch = 10
-back_propagation_batch_size = 128
+back_propagation_batch_size = 64
 k_fold = 10
-training_batch_size = 1000
+training_batch_size = 6000
 data_size_limit = 1000
 train_ratio = 0.7
 validation_ratio = 0.15
@@ -27,6 +27,7 @@ if ae_data_exist():
     dataset = load_ae_dataset()
 else:
     extract_data(filter_journals=True)
+    # extract_data(filter_journals=True, size_limit=data_size_limit)
     dataset = load_ae_dataset()
 
 ids = []
