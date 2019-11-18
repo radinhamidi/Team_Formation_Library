@@ -1,4 +1,4 @@
-from DataAccessLayer.load_dblp_data import *
+import DataAccessLayer.load_dblp_data as dblp
 from keras.layers import Input, Dense
 from keras.models import Model
 from keras import backend as K
@@ -23,12 +23,12 @@ validation_ratio = 0.15
 np.random.seed(seed)
 print(K.tensorflow_backend._get_available_gpus())
 
-if ae_data_exist():
-    dataset = load_ae_dataset()
+if dblp.ae_data_exist():
+    dataset = dblp.load_ae_dataset()
 else:
-    extract_data(filter_journals=True)
+    dblp.extract_data(filter_journals=True)
     # extract_data(filter_journals=True, size_limit=data_size_limit)
-    dataset = load_ae_dataset()
+    dataset = dblp.load_ae_dataset()
 
 ids = []
 x = []
@@ -119,8 +119,8 @@ for train_index, test_index in cv.split(x):
           .format(back_propagation_batch_size, epoch, training_batch_size))
     # Training
     batch_counter = 1
-    for x_train_batch, y_train_batch in zip(batch_generator(x_train, training_batch_size),
-                                            batch_generator(y_train, training_batch_size)):
+    for x_train_batch, y_train_batch in zip(dblp.batch_generator(x_train, training_batch_size),
+                                            dblp.batch_generator(y_train, training_batch_size)):
         print('Training batch {} of fold {}.'.format(batch_counter, fold_counter))
         autoencoder.fit(x_train_batch, y_train_batch,
                         epochs=epoch,
@@ -163,20 +163,20 @@ if save_model_q.lower() == 'y':
     #     json_file.write(encoder_model_json)
     # with open('./Models/{}.json'.format(decoder_name), "w") as json_file:
     #     json_file.write(decoder_model_json)
-    with open('../Output/Models/{}.json'.format(model_name), "w") as json_file:
+    with open('./Output/Models/{}.json'.format(model_name), "w") as json_file:
         json_file.write(model_json)
 
     # encoder.save_weights("./Models/weights/{}.h5".format(encoder_name))
     # decoder.save_weights("./Models/weights/{}.h5".format(decoder_name))
-    autoencoder.save_weights("../Output/Models/Weights/{}.h5".format(model_name))
+    autoencoder.save_weights("./Output/Models/Weights/{}.h5".format(model_name))
 
-    with open('../Output/Models/{}_Time{}_ACC{}_Loss{}_Epoch{}_kFold{}_BatchBP{}_BatchTraining{}.txt'
+    with open('./Output/Models/{}_Time{}_ACC{}_Loss{}_Epoch{}_kFold{}_BatchBP{}_BatchTraining{}.txt'
                       .format(model_name, time_str, 0, int(np.mean(cvscores) * 1000), epoch, k_fold,
                               back_propagation_batch_size, training_batch_size), 'w') as f:
         with redirect_stdout(f):
             autoencoder.summary()
 
-    plot_model(autoencoder, '../Output/Models/{}_Time{}_ACC{}_Loss{}_Epoch{}_kFold{}_BatchBP{}_BatchTraining{}.png'
+    plot_model(autoencoder, './Output/Models/{}_Time{}_ACC{}_Loss{}_Epoch{}_kFold{}_BatchBP{}_BatchTraining{}.png'
                .format(model_name, time_str, 0, int(np.mean(cvscores) * 1000), epoch, k_fold,
                        back_propagation_batch_size, training_batch_size))
     print('Model and its summary saved.')
