@@ -11,14 +11,15 @@ from contextlib import redirect_stdout
 
 ######## Definitions
 seed = 7
-epoch = 20
-back_propagation_batch_size = 4
+epoch = 5
+back_propagation_batch_size = 8
 k_fold = 10
-evaluation_k_set = np.arange(10, 300, 10)
-training_batch_size = 3000
+evaluation_k_set = np.arange(10, 1100, 100)
+training_batch_size = 6000
 data_size_limit = 1000
 train_ratio = 0.7
 validation_ratio = 0.15
+encoding_dim = 5000  # encoded size
 ########
 
 # fix random seed for reproducibility
@@ -54,7 +55,13 @@ y = np.asarray(y)
 cv = KFold(n_splits=k_fold, random_state=seed, shuffle=True)
 cvscores = []
 
-# Defining evaluation scores holders
+# Defining evaluation scores holders for train data
+p_at_k_all_train = dblp_eval.init_eval_holder(evaluation_k_set) # all p@k of instances in one fold and one k_evaluation_set
+p_at_k_overall_train = dblp_eval.init_eval_holder(evaluation_k_set) # overall p@k of instances in one fold and one k_evaluation_set
+r_at_k_all_train = dblp_eval.init_eval_holder(evaluation_k_set) # all r@k of instances in one fold and one k_evaluation_set
+r_at_k_overall_train = dblp_eval.init_eval_holder(evaluation_k_set) # overall r@k of instances in one fold and one k_evaluation_set
+
+# Defining evaluation scores holders for test data
 p_at_k_all = dblp_eval.init_eval_holder(evaluation_k_set) # all p@k of instances in one fold and one k_evaluation_set
 p_at_k_overall = dblp_eval.init_eval_holder(evaluation_k_set) # overall p@k of instances in one fold and one k_evaluation_set
 r_at_k_all = dblp_eval.init_eval_holder(evaluation_k_set) # all r@k of instances in one fold and one k_evaluation_set
@@ -71,7 +78,6 @@ for train_index, test_index in cv.split(x):
     # encoder_hidden_layer_dim = 3675  # encoder first hidden layer
     # encoder_hidden_layer_dim_2 = 4200  # encoder second hidden layer
     # encoder_hidden_layer_dim_3 = 2700  # encoder third hidden layer
-    encoding_dim = 2000  # encoded size
     # decoder_hidden_layer_dim = 3675  # decoder first hidden layer
     # data_dim is input dimension
     input_dim = x_train[0].shape[1]
@@ -109,7 +115,7 @@ for train_index, test_index in cv.split(x):
     # decoder = Model(encoded_input, decoder_layer(decoder_hidden(encoded_input)))
     # decoder = Model(encoded_input, decoder_layer(encoded_input))
 
-    autoencoder.compile(optimizer='adadelta', loss='mean_squared_error')
+    autoencoder.compile(optimizer='adaGrad', loss='mean_absolute_error')
 
     # x_train = x_train.astype('float32') / 255.
     # x_test = x_test.astype('float32') / 255.
@@ -155,22 +161,41 @@ for train_index, test_index in cv.split(x):
     print('Test loss of fold {}: {}'.format(fold_counter, score))
     cvscores.append(score)
 
-    # @k evaluation process
+    # @k evaluation process for last train batch data
+    print("Evaluation on last batch of train data.")
+    for k in evaluation_k_set:
+        # p@k evaluation
+        print("Evaluating p@k for top {} records in fold {}.".format(k, fold_counter))
+        p_at_k, p_at_k_array = dblp_eval.p_at_k(autoencoder.predict(x_train_batch), y_train_batch, k=k)
+        p_at_k_overall_train[k].append(p_at_k)
+        p_at_k_all_train[k].append(p_at_k_array)
+        # r@k evaluation
+        print("Evaluating r@k for top {} records in fold {}.".format(k, fold_counter))
+        r_at_k, r_at_k_array = dblp_eval.r_at_k(autoencoder.predict(x_train_batch), y_train_batch, k=k)
+        r_at_k_overall_train[k].append(r_at_k)
+        r_at_k_all_train[k].append(r_at_k_array)
+
+        print("For top {} in Train data:\nP@{}:{}\nR@{}:{}".format(k, k, p_at_k, k, r_at_k))
+
+    # @k evaluation process for test data
+    print("Evaluation on test data.")
     for k in evaluation_k_set:
         # p@k evaluation
         print("Evaluating p@k for top {} records in fold {}.".format(k, fold_counter))
         p_at_k, p_at_k_array = dblp_eval.p_at_k(autoencoder.predict(
             np.asarray([x_test_record.todense() for x_test_record in x_test]).reshape(x_test.__len__(), -1)),
             np.asarray([y_test_record.todense() for y_test_record in y_test]).reshape(y_test.__len__(), -1), k=k)
-        p_at_k_all[k].append(p_at_k)
-        p_at_k_overall[k].append(p_at_k_array)
+        p_at_k_overall[k].append(p_at_k)
+        p_at_k_all[k].append(p_at_k_array)
         # r@k evaluation
         print("Evaluating r@k for top {} records in fold {}.".format(k, fold_counter))
         r_at_k, r_at_k_array = dblp_eval.r_at_k(autoencoder.predict(
             np.asarray([x_test_record.todense() for x_test_record in x_test]).reshape(x_test.__len__(), -1)),
             np.asarray([y_test_record.todense() for y_test_record in y_test]).reshape(y_test.__len__(), -1), k=k)
-        r_at_k_all[k].append(r_at_k)
-        r_at_k_overall[k].append(r_at_k_array)
+        r_at_k_overall[k].append(r_at_k)
+        r_at_k_all[k].append(r_at_k_array)
+
+        print("For top {} in Test data:\nP@{}:{}\nR@{}:{}".format(k, k, p_at_k, k, r_at_k))
 
     # for test_instance in x_test:
     #     result = autoencoder.predict(test_instance)
@@ -190,28 +215,39 @@ for train_index, test_index in cv.split(x):
     #     json_file.write(encoder_model_json)
     # with open('./Models/{}.json'.format(decoder_name), "w") as json_file:
     #     json_file.write(decoder_model_json)
-    with open('../Output/Models/T{}_Fold{}.json'.format(time_str, fold_counter), "w") as json_file:
+    with open('../Output/Models/Time{}_Fold{}.json'.format(time_str, fold_counter), "w") as json_file:
         json_file.write(model_json)
 
     # encoder.save_weights("./Models/weights/{}.h5".format(encoder_name))
     # decoder.save_weights("./Models/weights/{}.h5".format(decoder_name))
-    autoencoder.save_weights("../Output/Models/Weights/T{}_Fold{}.h5".format(time_str, fold_counter))
+    autoencoder.save_weights("../Output/Models/Weights/Time{}_Fold{}.h5".format(time_str, fold_counter))
 
-    with open('../Output/Models/T{}_Fold{}_Loss{}_Epoch{}_kFold{}_BatchBP{}_BatchTraining{}.txt'
-                      .format(time_str, fold_counter, int(np.mean(cvscores) * 1000), epoch, k_fold,
+    with open('../Output/Models/Time{}_EncodingDim{}_Fold{}_Loss{}_Epoch{}_kFold{}_BatchBP{}_BatchTraining{}.txt'
+                      .format(time_str, encoding_dim, fold_counter, int(np.mean(cvscores) * 1000), epoch, k_fold,
                               back_propagation_batch_size, training_batch_size), 'w') as f:
         with redirect_stdout(f):
             autoencoder.summary()
 
-    # plot_model(autoencoder, '../Output/Models/Time{}_Fold{}_Loss{}_Epoch{}_kFold{}_BatchBP{}_BatchTraining{}.png'
-    #            .format(time_str, fold_counter, int(np.mean(cvscores) * 1000), epoch, k_fold,
-    #                    back_propagation_batch_size, training_batch_size))
+    plot_model(autoencoder, '../Output/Models/Time{}_EncodingDim{}_Fold{}_Loss{}_Epoch{}_kFold{}_BatchBP{}_BatchTraining{}.png'
+               .format(time_str, encoding_dim, fold_counter, int(np.mean(cvscores) * 1000), epoch, k_fold,
+                       back_propagation_batch_size, training_batch_size))
     # print('Model and its summary and architecture plot are saved.')
     print('Model and its summary are saved.')
 
-    dblp_eval.save_record(p_at_k_all, 'p@k_all_{}'.format(time_str))
-    dblp_eval.save_record(p_at_k_overall, 'p@k_{}'.format(time_str))
-    dblp_eval.save_record(r_at_k_all, 'r@k_all_{}'.format(time_str))
-    dblp_eval.save_record(p_at_k_overall, 'r@k_{}'.format(time_str))
+    # Deleting model from RAM
+    K.clear_session()
+
+    # Saving evaluation data
+    dblp_eval.save_record(p_at_k_all_train, 'p@k_all_train_Time{}'.format(time_str))
+    dblp_eval.save_record(p_at_k_overall_train, 'p@k_train_Time{}'.format(time_str))
+    dblp_eval.save_record(r_at_k_all_train, 'r@k_all_train_Time{}'.format(time_str))
+    dblp_eval.save_record(p_at_k_overall_train, 'r@k_train_Time{}'.format(time_str))
+
+    dblp_eval.save_record(p_at_k_all, 'p@k_all_Time{}'.format(time_str))
+    dblp_eval.save_record(p_at_k_overall, 'p@k_Time{}'.format(time_str))
+    dblp_eval.save_record(r_at_k_all, 'r@k_all_Time{}'.format(time_str))
+    dblp_eval.save_record(p_at_k_overall, 'r@k_Time{}'.format(time_str))
+
+    print('Evaluation records are saved successfully.')
 
     fold_counter += 1
