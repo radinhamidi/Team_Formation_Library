@@ -11,11 +11,11 @@ from contextlib import redirect_stdout
 
 ######## Definitions
 seed = 7
-epoch = 10
-back_propagation_batch_size = 64
+epoch = 20
+back_propagation_batch_size = 4
 k_fold = 10
-evaluation_k_set = np.arange(10, 100, 10)
-training_batch_size = 6000
+evaluation_k_set = np.arange(10, 300, 10)
+training_batch_size = 3000
 data_size_limit = 1000
 train_ratio = 0.7
 validation_ratio = 0.15
@@ -203,10 +203,11 @@ for train_index, test_index in cv.split(x):
         with redirect_stdout(f):
             autoencoder.summary()
 
-    plot_model(autoencoder, '../Output/Models/Time{}_Fold{}_Loss{}_Epoch{}_kFold{}_BatchBP{}_BatchTraining{}.png'
-               .format(time_str, fold_counter, int(np.mean(cvscores) * 1000), epoch, k_fold,
-                       back_propagation_batch_size, training_batch_size))
-    print('Model and its summary and architecture plot saved.')
+    # plot_model(autoencoder, '../Output/Models/Time{}_Fold{}_Loss{}_Epoch{}_kFold{}_BatchBP{}_BatchTraining{}.png'
+    #            .format(time_str, fold_counter, int(np.mean(cvscores) * 1000), epoch, k_fold,
+    #                    back_propagation_batch_size, training_batch_size))
+    # print('Model and its summary and architecture plot are saved.')
+    print('Model and its summary are saved.')
 
     dblp_eval.save_record(p_at_k_all, 'p@k_all_{}'.format(time_str))
     dblp_eval.save_record(p_at_k_overall, 'p@k_{}'.format(time_str))

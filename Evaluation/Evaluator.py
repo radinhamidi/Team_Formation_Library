@@ -47,4 +47,4 @@ def init_eval_holder(evaluation_k_set=None):
     return dict
 
 def save_record(dict, dict_name, dir='../Output/'):
-   json.dump(dict, open(dir+dict_name+'.json', 'w'))
+   json.dump(str(dict), open(dir+dict_name+'.json', 'w'))
