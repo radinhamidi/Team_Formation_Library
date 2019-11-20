@@ -1,0 +1,7 @@
+DBLP (Before skill/member size filter)
+For each fold:
+Train Size: 62934 Test Size: 6993
+
+DBLP (After skill/member size filter)
+For each fold:
+Train Size: 43451 Test Size: 4828
