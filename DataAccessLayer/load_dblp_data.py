@@ -144,6 +144,9 @@ def extract_data(filter_journals=False, size_limit=np.inf, skill_size_filter=0, 
                  source_dir='../Dataset/dblp.pkl', skill_dir='../Dataset/invertedTermCount.txt',
                  author_dir='../Dataset/authorNameId.txt', output_dir='../Dataset/ae_dataset.pkl'):
 
+    if not source_pkl_exist(file_path=source_dir):
+        convert_to_pkl()
+
     data = load_citation_pkl(source_dir)
     skills, skills_freq = load_skills(skill_dir)
     authors, nameIDs = load_authors(author_dir)
@@ -166,13 +169,13 @@ def extract_data(filter_journals=False, size_limit=np.inf, skill_size_filter=0, 
             if s in record['title']:
                 skill_vector[i] = 1
 
-        if np.sum(skill_vector)<=skill_size_filter or np.sum(user_vector)<=member_size_filter:
+        if np.sum(skill_vector) <= skill_size_filter or np.sum(user_vector) <= member_size_filter:
             continue
 
         skill_vector_sparse = sparse.coo_matrix(skill_vector)
         user_vector_sparse = sparse.coo_matrix(user_vector)
         dataset.append([id, skill_vector_sparse, user_vector_sparse])
-        print("File {} added to dataset file. (Total Files: {})".format(id, counter+1))
+        print("File {} added to dataset file. (Total Files: {})".format(id, counter + 1))
 
         counter += 1
         if counter >= size_limit:
@@ -180,7 +183,7 @@ def extract_data(filter_journals=False, size_limit=np.inf, skill_size_filter=0, 
 
     with open(output_dir, 'wb') as f:
         pickle.dump(dataset, f)
-        print('{} records saved to {} successfully.'.format(counter+1, output_dir))
+        print('{} records saved to {} successfully.'.format(counter + 1, output_dir))
 
 
 def load_ae_dataset(dir='../Dataset/ae_dataset.pkl'):
@@ -191,6 +194,14 @@ def load_ae_dataset(dir='../Dataset/ae_dataset.pkl'):
 
 # we should check if we have the proper dataset for ae or not. and if not then we run extract_data function
 def ae_data_exist(file_path='../Dataset/ae_dataset.pkl'):
+    if path.exists(file_path):
+        return True
+    else:
+        return False
+
+
+# we should check if we have the source dataset or not. and if not then we run convert_to_pkl() function
+def source_pkl_exist(file_path='../Dataset/dblp.pkl'):
     if path.exists(file_path):
         return True
     else:
