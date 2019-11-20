@@ -117,3 +117,6 @@ venv.bak/
 !Output/Figures/.gitkeep
 !Output/Models/.gitkeep
 !Output/Models/Weights/.gitkeep
+
+
+/Backyard/*.pkl
