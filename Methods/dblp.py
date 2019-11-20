@@ -8,18 +8,20 @@ import numpy as np
 import time
 from keras.utils import plot_model
 from contextlib import redirect_stdout
+from keras import regularizers
 
 ######## Definitions
+dataset_name = 'DBLP'
 seed = 7
 epoch = 5
-back_propagation_batch_size = 8
+back_propagation_batch_size = 128
 k_fold = 10
 evaluation_k_set = np.arange(10, 1100, 100)
 training_batch_size = 6000
 data_size_limit = 1000
 train_ratio = 0.7
 validation_ratio = 0.15
-encoding_dim = 5000  # encoded size
+encoding_dim = 3000  # encoded size
 ########
 
 # fix random seed for reproducibility
@@ -92,12 +94,12 @@ for train_index, test_index in cv.split(x):
     # hidden_layer_1_3 = Dense(encoder_hidden_layer_dim_2, activation='relu')(hidden_layer_1_2)
     # "encoded" is the encoded representation of the input
     # encoded = Dense(encoding_dim, activation='relu')(hidden_layer_1)
-    encoded = Dense(encoding_dim, activation='sigmoid')(input_img)
+    encoded = Dense(encoding_dim, activation='relu', activity_regularizer=regularizers.l1(10e-4))(input_img)
     # hidden #2 in decoder
     # hidden_layer_2 = Dense(decoder_hidden_layer_dim, activation='relu')(encoded)
     # "decoded" is the lossy reconstruction of the input
     # decoded = Dense(output_dim, activation='sigmoid')(hidden_layer_2)
-    decoded = Dense(output_dim, activation='sigmoid')(encoded)
+    decoded = Dense(output_dim, activation='relu', activity_regularizer=regularizers.l1(10e-))(encoded)
 
     # this model maps an input to its reconstruction
     autoencoder = Model(inputs=input_img, outputs=decoded)
@@ -215,22 +217,22 @@ for train_index, test_index in cv.split(x):
     #     json_file.write(encoder_model_json)
     # with open('./Models/{}.json'.format(decoder_name), "w") as json_file:
     #     json_file.write(decoder_model_json)
-    with open('../Output/Models/Time{}_Fold{}.json'.format(time_str, fold_counter), "w") as json_file:
+    with open('../Output/Models/{}_Time{}_Fold{}.json'.format(dataset_name, time_str, fold_counter), "w") as json_file:
         json_file.write(model_json)
 
     # encoder.save_weights("./Models/weights/{}.h5".format(encoder_name))
     # decoder.save_weights("./Models/weights/{}.h5".format(decoder_name))
-    autoencoder.save_weights("../Output/Models/Weights/Time{}_Fold{}.h5".format(time_str, fold_counter))
+    autoencoder.save_weights("../Output/Models/Weights/{}_Time{}_Fold{}.h5".format(dataset_name, time_str, fold_counter))
 
-    with open('../Output/Models/Time{}_EncodingDim{}_Fold{}_Loss{}_Epoch{}_kFold{}_BatchBP{}_BatchTraining{}.txt'
-                      .format(time_str, encoding_dim, fold_counter, int(np.mean(cvscores) * 1000), epoch, k_fold,
+    with open('../Output/Models/{}_Time{}_EncodingDim{}_Fold{}_Loss{}_Epoch{}_kFold{}_BatchBP{}_BatchTraining{}.txt'
+                      .format(dataset_name, time_str, encoding_dim, fold_counter, int(np.mean(cvscores) * 1000), epoch, k_fold,
                               back_propagation_batch_size, training_batch_size), 'w') as f:
         with redirect_stdout(f):
             autoencoder.summary()
 
-    plot_model(autoencoder, '../Output/Models/Time{}_EncodingDim{}_Fold{}_Loss{}_Epoch{}_kFold{}_BatchBP{}_BatchTraining{}.png'
-               .format(time_str, encoding_dim, fold_counter, int(np.mean(cvscores) * 1000), epoch, k_fold,
-                       back_propagation_batch_size, training_batch_size))
+    # plot_model(autoencoder, '../Output/Models/{}_Time{}_EncodingDim{}_Fold{}_Loss{}_Epoch{}_kFold{}_BatchBP{}_BatchTraining{}.png'
+    #            .format(dataset_name, time_str, encoding_dim, fold_counter, int(np.mean(cvscores) * 1000), epoch, k_fold,
+    #                    back_propagation_batch_size, training_batch_size))
     # print('Model and its summary and architecture plot are saved.')
     print('Model and its summary are saved.')
 
@@ -238,15 +240,15 @@ for train_index, test_index in cv.split(x):
     K.clear_session()
 
     # Saving evaluation data
-    dblp_eval.save_record(p_at_k_all_train, 'p@k_all_train_Time{}'.format(time_str))
-    dblp_eval.save_record(p_at_k_overall_train, 'p@k_train_Time{}'.format(time_str))
-    dblp_eval.save_record(r_at_k_all_train, 'r@k_all_train_Time{}'.format(time_str))
-    dblp_eval.save_record(p_at_k_overall_train, 'r@k_train_Time{}'.format(time_str))
+    dblp_eval.save_record(p_at_k_all_train, '{}_p@k_all_train_Time{}'.format(dataset_name, time_str))
+    dblp_eval.save_record(p_at_k_overall_train, '{}_p@k_train_Time{}'.format(dataset_name, time_str))
+    dblp_eval.save_record(r_at_k_all_train, '{}_r@k_all_train_Time{}'.format(dataset_name, time_str))
+    dblp_eval.save_record(p_at_k_overall_train, '{}_r@k_train_Time{}'.format(dataset_name, time_str))
 
-    dblp_eval.save_record(p_at_k_all, 'p@k_all_Time{}'.format(time_str))
-    dblp_eval.save_record(p_at_k_overall, 'p@k_Time{}'.format(time_str))
-    dblp_eval.save_record(r_at_k_all, 'r@k_all_Time{}'.format(time_str))
-    dblp_eval.save_record(p_at_k_overall, 'r@k_Time{}'.format(time_str))
+    dblp_eval.save_record(p_at_k_all, '{}_p@k_all_Time{}'.format(dataset_name, time_str))
+    dblp_eval.save_record(p_at_k_overall, '{}_p@k_Time{}'.format(dataset_name, time_str))
+    dblp_eval.save_record(r_at_k_all, '{}_r@k_all_Time{}'.format(dataset_name, time_str))
+    dblp_eval.save_record(p_at_k_overall, '{}_r@k_Time{}'.format(dataset_name, time_str))
 
     print('Evaluation records are saved successfully.')
 
