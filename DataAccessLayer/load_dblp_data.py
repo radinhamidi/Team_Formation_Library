@@ -140,8 +140,8 @@ def convert_to_pkl(txt_dir='../Dataset/dblp.txt', pkl_dir='../Dataset/dblp.pkl',
 
 
 # dblp to sparse matrix: output: pickle file of the sparse matrix
-def extract_data(filter_journals=False, size_limit=np.inf, source_dir='../Dataset/dblp.pkl',
-                 skill_dir='../Dataset/invertedTermCount.txt',
+def extract_data(filter_journals=False, size_limit=np.inf, skill_size_filter=0, member_size_filter=0,
+                 source_dir='../Dataset/dblp.pkl', skill_dir='../Dataset/invertedTermCount.txt',
                  author_dir='../Dataset/authorNameId.txt', output_dir='../Dataset/ae_dataset.pkl'):
 
     data = load_citation_pkl(source_dir)
@@ -165,6 +165,9 @@ def extract_data(filter_journals=False, size_limit=np.inf, source_dir='../Datase
         for i, s in enumerate(skills):
             if s in record['title']:
                 skill_vector[i] = 1
+
+        if np.sum(skill_vector)<=skill_size_filter or np.sum(user_vector)<=member_size_filter:
+            continue
 
         skill_vector_sparse = sparse.coo_matrix(skill_vector)
         user_vector_sparse = sparse.coo_matrix(user_vector)

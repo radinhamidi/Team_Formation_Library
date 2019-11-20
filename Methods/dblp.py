@@ -19,6 +19,8 @@ training_batch_size = 6000
 data_size_limit = 1000
 train_ratio = 0.7
 validation_ratio = 0.15
+skill_size_filter = 0
+member_size_filter = 0
 encoding_dim = 5000  # encoded size
 ########
 
@@ -29,7 +31,7 @@ print(K.tensorflow_backend._get_available_gpus())
 if dblp.ae_data_exist():
     dataset = dblp.load_ae_dataset()
 else:
-    dblp.extract_data(filter_journals=True)
+    dblp.extract_data(filter_journals=True, skill_size_filter=skill_size_filter, member_size_filter=member_size_filter)
     # extract_data(filter_journals=True, size_limit=data_size_limit)
     dataset = dblp.load_ae_dataset()
 
