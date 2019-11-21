@@ -21,8 +21,8 @@ training_batch_size = 3000
 data_size_limit = 1000
 train_ratio = 0.7
 validation_ratio = 0.15
-skill_size_filter = 0
-member_size_filter = 0
+min_skill_size = 0
+min_member_size = 0
 encoding_dim = 3000  # encoded size
 ########
 
@@ -33,7 +33,7 @@ print(K.tensorflow_backend._get_available_gpus())
 if dblp.ae_data_exist():
     dataset = dblp.load_ae_dataset()
 else:
-    dblp.extract_data(filter_journals=True, skill_size_filter=skill_size_filter, member_size_filter=member_size_filter)
+    dblp.extract_data(filter_journals=True, skill_size_filter=min_skill_size, member_size_filter=min_member_size)
     # extract_data(filter_journals=True, size_limit=data_size_limit)
     dataset = dblp.load_ae_dataset()
 
@@ -86,6 +86,7 @@ for train_index, test_index in cv.split(x):
     # data_dim is input dimension
     input_dim = x_train[0].shape[1]
     output_dim = y_train[0].shape[1]
+    print("Hi ", input_dim, output_dim)
     # this is our input placeholder
     input_img = Input(shape=(input_dim,))
     # hidden #1 in encoder
@@ -107,7 +108,7 @@ for train_index, test_index in cv.split(x):
     autoencoder = Model(inputs=input_img, outputs=decoded)
 
     # this model maps an input to its encoded representation
-    encoder = Model(input_img, encoded)
+    # encoder = Model(input_img, encoded)
 
     # create a placeholder for an encoded (32-dimensional) input
     # encoded_input = Input(shape=(encoding_dim,))
