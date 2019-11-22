@@ -45,7 +45,7 @@ y_test = y[ids[int(y.__len__() * (train_ratio + validation_ratio)):]]
 
 input_dim = x_train.shape[1]
 output_dim = y_train.shape[1]
-print("Hi ", input_dim, output_dim)
+print("Input/Output dimensions ", input_dim, output_dim)
 # this is our input placeholder
 input_img = Input(shape=(input_dim,))
 lambda_val = 0.001  # Weight decay , refer : https://stackoverflow.com/questions/44495698/keras-difference-between-kernel-and-activity-regularizers
@@ -57,7 +57,7 @@ def sparse_reg(activ_matrix):
     p_hat = K.mean(activ_matrix)  # average over the batch samples
     print("p_hat = ", p_hat)
     # KLD = p*(K.log(p)-K.log(p_hat)) + (1-p)*(K.log(1-p)-K.log(1-p_hat))
-    KLD = p * (K.log(p / p_hat)) + (1 - p) * (K.log(1 - p / 1 - p_hat))
+    KLD = p * (K.log(p / p_hat)) + (1 - p) * (K.log((1 - p) / (1 - p_hat)))
     print("KLD = ", KLD)
     return beta * K.sum(KLD)  # sum over the layer units
 

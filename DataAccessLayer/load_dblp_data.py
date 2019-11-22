@@ -143,7 +143,6 @@ def convert_to_pkl(txt_dir='../Dataset/dblp.txt', pkl_dir='../Dataset/dblp.pkl',
 def extract_data(filter_journals=False, size_limit=np.inf, skill_size_filter=0, member_size_filter=0,
                  source_dir='../Dataset/dblp.pkl', skill_dir='../Dataset/invertedTermCount.txt',
                  author_dir='../Dataset/authorNameId.txt', output_dir='../Dataset/ae_dataset.pkl'):
-
     if not source_pkl_exist(file_path=source_dir):
         convert_to_pkl()
 
@@ -151,7 +150,7 @@ def extract_data(filter_journals=False, size_limit=np.inf, skill_size_filter=0, 
     skills, skills_freq = load_skills(skill_dir)
     authors, nameIDs = load_authors(author_dir)
     skills = np.asarray(skills)
-    authors = np.asarray(authors)
+    authors = [author.strip().lower() for author in authors]
 
     dataset = []
     counter = 0
@@ -164,7 +163,10 @@ def extract_data(filter_journals=False, size_limit=np.inf, skill_size_filter=0, 
         user_vector = np.zeros(authors.__len__())
 
         for author in record['authors']:
-            user_vector[np.where(authors == author)] = 1
+            try:
+                user_vector[authors.index(author.strip().lower())] = 1
+            except:
+                pass
 
         for i, s in enumerate(skills):
             if s in record['title']:

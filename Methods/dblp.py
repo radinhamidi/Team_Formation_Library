@@ -6,6 +6,7 @@ from keras import backend as K
 from sklearn.model_selection import KFold
 import numpy as np
 import time
+import pickle as pkl
 from keras.utils import plot_model
 from contextlib import redirect_stdout
 from keras import regularizers
@@ -13,11 +14,11 @@ from keras import regularizers
 ######## Definitions
 dataset_name = 'DBLP'
 seed = 7
-epoch = 10
+epoch = 20
 back_propagation_batch_size = 64
 k_fold = 10
 evaluation_k_set = np.arange(10, 1100, 100)
-training_batch_size = 6000
+training_batch_size = 2000
 data_size_limit = 1000
 train_ratio = 0.7
 validation_ratio = 0.15
@@ -76,7 +77,7 @@ lambda_val = 0.001  # Weight decay , refer : https://stackoverflow.com/questions
 
 # Custom Regularizer function
 def sparse_reg(activ_matrix):
-    p = 0.04
+    p = 0.01
     beta = 3
     p_hat = K.mean(activ_matrix)  # average over the batch samples
     print("p_hat = ", p_hat)
@@ -100,7 +101,7 @@ for train_index, test_index in cv.split(x):
     # data_dim is input dimension
     input_dim = x_train[0].shape[1]
     output_dim = y_train[0].shape[1]
-    print("Dimensions:  ", input_dim, output_dim)
+    print("Input/Output Dimensions:  ", input_dim, output_dim)
     # this is our input placeholder
     input_img = Input(shape=(input_dim,))
     # hidden #1 in encoder
@@ -111,12 +112,12 @@ for train_index, test_index in cv.split(x):
     # hidden_layer_1_3 = Dense(encoder_hidden_layer_dim_2, activation='relu')(hidden_layer_1_2)
     # "encoded" is the encoded representation of the input
     # encoded = Dense(encoding_dim, activation='relu')(hidden_layer_1)
-    encoded = Dense(encoding_dim, activation='relu', kernel_regularizer=regularizers.l2(lambda_val / 2), activity_regularizer=sparse_reg)(input_img)
+    encoded = Dense(encoding_dim, activation='sigmoid', kernel_regularizer=regularizers.l2(lambda_val / 2), activity_regularizer=sparse_reg)(input_img)
     # hidden #2 in decoder
     # hidden_layer_2 = Dense(decoder_hidden_layer_dim, activation='relu')(encoded)
     # "decoded" is the lossy reconstruction of the input
     # decoded = Dense(output_dim, activation='sigmoid')(hidden_layer_2)
-    decoded = Dense(output_dim, activation='relu', kernel_regularizer=regularizers.l2(lambda_val / 2), activity_regularizer=sparse_reg)(encoded)
+    decoded = Dense(output_dim, activation='sigmoid', kernel_regularizer=regularizers.l2(lambda_val / 2), activity_regularizer=sparse_reg)(encoded)
 
     # this model maps an input to its reconstruction
     autoencoder = Model(inputs=input_img, outputs=decoded)
@@ -216,6 +217,12 @@ for train_index, test_index in cv.split(x):
         r_at_k_all[k].append(r_at_k_array)
 
         print("For top {} in Test data:\nP@{}:{}\nR@{}:{}".format(k, k, p_at_k, k, r_at_k))
+
+    # Sampleset for sketch
+    # with open('../Backyard/x_sampleset.pkl', 'wb') as f:
+    #     pkl.dump(x_train_batch, f)
+    # with open('../Backyard/y_sampleset.pkl', 'wb') as f:
+    #     pkl.dump(y_train_batch, f)
 
     # for test_instance in x_test:
     #     result = autoencoder.predict(test_instance)
