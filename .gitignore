@@ -108,6 +108,7 @@ venv.bak/
 /Dataset/*
 # exception to the rule
 !Dataset/.gitkeep
+!Dataset/ae_dataset.pkl
 
 # For output files: ignore everythong but keep the strcuture. (gitkeep file is used to keep the structure)
 # exclude everything
