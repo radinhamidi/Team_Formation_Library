@@ -151,6 +151,7 @@ def extract_data(filter_journals=False, size_limit=np.inf, skill_size_filter=0, 
     skills, skills_freq = load_skills(skill_dir)
     authors, nameIDs = load_authors(author_dir)
     skills = np.asarray(skills)
+    authors = np.asarray(authors)
 
     dataset = []
     counter = 0

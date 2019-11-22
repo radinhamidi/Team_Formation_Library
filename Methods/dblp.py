@@ -13,17 +13,17 @@ from keras import regularizers
 ######## Definitions
 dataset_name = 'DBLP'
 seed = 7
-epoch = 5
-back_propagation_batch_size = 128
+epoch = 10
+back_propagation_batch_size = 64
 k_fold = 10
 evaluation_k_set = np.arange(10, 1100, 100)
-training_batch_size = 3000
+training_batch_size = 6000
 data_size_limit = 1000
 train_ratio = 0.7
 validation_ratio = 0.15
 min_skill_size = 0
 min_member_size = 0
-encoding_dim = 3000  # encoded size
+encoding_dim = 4000  # encoded size
 ########
 
 # fix random seed for reproducibility
@@ -72,6 +72,20 @@ r_at_k_all = dblp_eval.init_eval_holder(evaluation_k_set) # all r@k of instances
 r_at_k_overall = dblp_eval.init_eval_holder(evaluation_k_set) # overall r@k of instances in one fold and one k_evaluation_set
 
 
+lambda_val = 0.001  # Weight decay , refer : https://stackoverflow.com/questions/44495698/keras-difference-between-kernel-and-activity-regularizers
+
+# Custom Regularizer function
+def sparse_reg(activ_matrix):
+    p = 0.04
+    beta = 3
+    p_hat = K.mean(activ_matrix)  # average over the batch samples
+    print("p_hat = ", p_hat)
+    # KLD = p*(K.log(p)-K.log(p_hat)) + (1-p)*(K.log(1-p)-K.log(1-p_hat))
+    KLD = p * (K.log(p / p_hat)) + (1 - p) * (K.log((1 - p)/(1 - p_hat)))
+    print("KLD = ", KLD)
+    return beta * K.sum(KLD)  # sum over the layer units
+
+
 fold_counter = 1
 time_str = time.strftime("%Y%m%d-%H%M%S")
 for train_index, test_index in cv.split(x):
@@ -86,7 +100,7 @@ for train_index, test_index in cv.split(x):
     # data_dim is input dimension
     input_dim = x_train[0].shape[1]
     output_dim = y_train[0].shape[1]
-    print("Hi ", input_dim, output_dim)
+    print("Dimensions:  ", input_dim, output_dim)
     # this is our input placeholder
     input_img = Input(shape=(input_dim,))
     # hidden #1 in encoder
@@ -97,12 +111,12 @@ for train_index, test_index in cv.split(x):
     # hidden_layer_1_3 = Dense(encoder_hidden_layer_dim_2, activation='relu')(hidden_layer_1_2)
     # "encoded" is the encoded representation of the input
     # encoded = Dense(encoding_dim, activation='relu')(hidden_layer_1)
-    encoded = Dense(encoding_dim, activation='relu', activity_regularizer=regularizers.l1(10e-4))(input_img)
+    encoded = Dense(encoding_dim, activation='relu', kernel_regularizer=regularizers.l2(lambda_val / 2), activity_regularizer=sparse_reg)(input_img)
     # hidden #2 in decoder
     # hidden_layer_2 = Dense(decoder_hidden_layer_dim, activation='relu')(encoded)
     # "decoded" is the lossy reconstruction of the input
     # decoded = Dense(output_dim, activation='sigmoid')(hidden_layer_2)
-    decoded = Dense(output_dim, activation='relu', activity_regularizer=regularizers.l1(10e-4))(encoded)
+    decoded = Dense(output_dim, activation='relu', kernel_regularizer=regularizers.l2(lambda_val / 2), activity_regularizer=sparse_reg)(encoded)
 
     # this model maps an input to its reconstruction
     autoencoder = Model(inputs=input_img, outputs=decoded)
@@ -147,8 +161,9 @@ for train_index, test_index in cv.split(x):
                         epochs=epoch,
                         batch_size=back_propagation_batch_size,
                         shuffle=True,
-                        verbose=2)
-        # validation_data=(x_test, y_test))
+                        verbose=2,
+                        validation_data=(np.asarray([x_test_record.todense() for x_test_record in x_test]).reshape(x_test.__len__(), -1),
+                                         np.asarray([y_test_record.todense() for y_test_record in y_test]).reshape(y_test.__len__(), -1)))
         batch_counter += 1
         # Evaluating
         # encoded_imgs = encoder.predict(x_test)
