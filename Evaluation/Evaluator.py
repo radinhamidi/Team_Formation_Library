@@ -22,7 +22,7 @@ def r_at_k(prediction, true, k=10):
     return np.mean(all_recall), all_recall
 
 
-def p_at_k(prediction, true, k=10): #Todo unit test of p@k and r@k
+def p_at_k(prediction, true, k=10):
     all_precision = []
     for pred, t in zip(prediction, true):
         t = np.asarray(t)

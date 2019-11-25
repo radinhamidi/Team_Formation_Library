@@ -7,7 +7,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pickle as pkl
 import Evaluation.Evaluator as dblp_eval
+import Evaluation. plotter
 from Common.Utils import crossValidate
+from Evaluation import plotter
 
 fax = './x_sampleset.pkl'
 fay = './y_sampleset.pkl'
@@ -80,39 +82,46 @@ autoencoder.load_weights('./KL.h5')
 
 y_pred = autoencoder.predict(x_test)
 
-k = 400
-all_precision = []
-for pred, t in zip(y_pred, y_test):
-    t = np.asarray(t)
-    pred = np.asarray(pred)
+k_set = np.arange(10, 10000, 10)
+p_at_k = dblp_eval.init_eval_holder(k_set) # all p@k of instances in one fold and one k_evaluation_set
+r_at_k = dblp_eval.init_eval_holder(k_set) # all p@k of instances in one fold and one k_evaluation_set
+for k in k_set:
+    print('Calculating for @{}'.format(k))
+    # all_precision = []
+    # for pred, t in zip(y_pred, y_test):
+    #     t = np.asarray(t)
+    #     pred = np.asarray(pred)
+    #
+    #     t_indices = np.argwhere(t)
+    #     if t_indices.__len__() == 0:
+    #         continue
+    #     pred_indices = pred.argsort()[-k:][::-1]
+    #
+    #     precision = 0
+    #     for pred_index in pred_indices:
+    #         if pred_index in t_indices:
+    #             precision += 1
+    #     all_precision.append(precision/pred_indices.__len__())
 
-    t_indices = np.argwhere(t)
-    if t_indices.__len__() == 0:
-        continue
-    pred_indices = pred.argsort()[-k:][::-1]
+    all_recall = []
+    for pred, t in zip(y_pred, y_test):
+        t = np.asarray(t)
+        pred = np.asarray(pred)
 
-    precision = 0
-    for pred_index in pred_indices:
-        if pred_index in t_indices:
-            precision += 1
-    all_precision.append(precision/pred_indices.__len__())
+        t_indices = np.argwhere(t)
+        if t_indices.__len__() == 0:
+            continue
+        pred_indices = pred.argsort()[-k:][::-1]
 
-all_recall = []
-for pred, t in zip(y_pred, y_test):
-    t = np.asarray(t)
-    pred = np.asarray(pred)
+        recall = 0
+        for t_index in t_indices:
+            if t_index in pred_indices:
+                recall += 1
+        all_recall.append(recall/t_indices.__len__())
 
-    t_indices = np.argwhere(t)
-    if t_indices.__len__() == 0:
-        continue
-    pred_indices = pred.argsort()[-k:][::-1]
-
-    recall = 0
-    for t_index in t_indices:
-        if t_index in pred_indices:
-            recall += 1
-    all_recall.append(recall/t_indices.__len__())
+    # p_at_k[k] = np.asarray(all_precision).mean()
+    r_at_k[k] = np.asarray(all_recall).mean()
 
 
-p = np.asarray(all_precision)
-r = np.asarray(all_recall)
+plotter.plot_at_k(k_set, r_at_k, 'Recall@k')
+# plotter.plot_at_k(k_set, p_at_k, 'Precision@k')
