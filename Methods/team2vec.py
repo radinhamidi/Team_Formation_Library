@@ -190,9 +190,17 @@ if __name__ == "__main__":
         elif opt in ("-w", "--window"):
             window = int(arg)
 
-    t2v.init(random.sample(team_matrix, 100))
-    # t2v.init(team_matrix)
-    # t2v.train(dimension=dimension, window=window, dist_mode=dm, output='./Output/Team2Vec/', epochs=100)
-    t2v.train(dimension=100, window=2, dist_mode=1, output='./Output/Team2Vec/', epochs=10)
+    t2v.init(team_matrix)
+    t2v.train(dimension=dimension, window=window, dist_mode=dm, output='./Output/Team2Vec/', epochs=100)
     t2v.plot_model('pca', output='./Output/Team2Vec/')
     t2v.plot_model('tsne', output='./Output/Team2Vec/')
+
+    #sample running string
+    #python3 -u ./Methods/team2vec.py -d 500 -w 2 -m 2>&1 |& tee  ./Output/Team2Vec/log_d500_w2_m1.txt
+
+    #test
+    # t2v.init(random.sample(team_matrix, 100))
+    # t2v.train(dimension=100, window=2, dist_mode=1, output='./Output/Team2Vec/', epochs=10)
+    # t2v.plot_model('pca', output='./Output/Team2Vec/')
+    # t2v.plot_model('tsne', output='./Output/Team2Vec/')
+
