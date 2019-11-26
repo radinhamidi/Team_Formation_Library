@@ -122,3 +122,6 @@ venv.bak/
 
 /Backyard/*.pkl
 /Backyard/*.h5
+.idea/misc.xml
+.idea/inspectionProfiles/Project_Default.xml
+.idea/Team Formation.iml
