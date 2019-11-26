@@ -1,3 +1,6 @@
-Data Loader
-Create Data Flow
-Build Arch
+Todo
+Check SGD with crop
+CHeck Custom function for model
+Check KL with different configs
+Add load model to dblp method
+Check sequence of training: epochs inside each batch or epoch over batches too
