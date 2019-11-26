@@ -20,10 +20,10 @@ with open(fay, 'rb') as f:
 train_ratio = 0.7
 validation_ratio = 0.2
 batch_sizes = 8
-epochs = 500
+epochs = 10
 embedding_size = 3000
-initial_sparsity = 500
-sparsity = 100
+initial_sparsity = 1000
+sparsity = 15
 sparsity_levels = calculate_sparsity_levels(initial_sparsity, sparsity, epochs)
 
 # Get the train and test as done in DL assignments.
@@ -48,7 +48,7 @@ k_sparse = KSparse(sparsity_levels=sparsity_levels, name='KSparse')(encoded)
 decoded = Dense(output_dim, activation='sigmoid')(k_sparse)
 
 autoencoder = Model(input_img, decoded)
-autoencoder.compile(optimizer='adagrad', loss='mse')  # What optimizer to use??
+autoencoder.compile(optimizer='adamax', loss='mse')  # What optimizer to use??
 
 
 # Removing normalization since using MSE - later

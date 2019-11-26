@@ -125,3 +125,8 @@ for k in k_set:
 
 plotter.plot_at_k(k_set, r_at_k, 'Recall@k')
 # plotter.plot_at_k(k_set, p_at_k, 'Precision@k')
+
+
+r_at_k_name = str(input('File name for saving R@K?'))
+with open('./{}.pkl'.format(r_at_k_name), 'wb') as f:
+    pkl.dump(r_at_k)

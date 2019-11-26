@@ -14,7 +14,7 @@ from keras import regularizers
 ######## Definitions
 dataset_name = 'DBLP'
 seed = 7
-epoch = 20
+epoch = 200
 back_propagation_batch_size = 64
 k_fold = 10
 evaluation_k_set = np.arange(10, 1100, 100)
@@ -61,14 +61,14 @@ cv = KFold(n_splits=k_fold, random_state=seed, shuffle=True)
 cvscores = []
 
 # Defining evaluation scores holders for train data
-p_at_k_all_train = dblp_eval.init_eval_holder(evaluation_k_set) # all p@k of instances in one fold and one k_evaluation_set
-p_at_k_overall_train = dblp_eval.init_eval_holder(evaluation_k_set) # overall p@k of instances in one fold and one k_evaluation_set
+# p_at_k_all_train = dblp_eval.init_eval_holder(evaluation_k_set) # all p@k of instances in one fold and one k_evaluation_set
+# p_at_k_overall_train = dblp_eval.init_eval_holder(evaluation_k_set) # overall p@k of instances in one fold and one k_evaluation_set
 r_at_k_all_train = dblp_eval.init_eval_holder(evaluation_k_set) # all r@k of instances in one fold and one k_evaluation_set
 r_at_k_overall_train = dblp_eval.init_eval_holder(evaluation_k_set) # overall r@k of instances in one fold and one k_evaluation_set
 
 # Defining evaluation scores holders for test data
-p_at_k_all = dblp_eval.init_eval_holder(evaluation_k_set) # all p@k of instances in one fold and one k_evaluation_set
-p_at_k_overall = dblp_eval.init_eval_holder(evaluation_k_set) # overall p@k of instances in one fold and one k_evaluation_set
+# p_at_k_all = dblp_eval.init_eval_holder(evaluation_k_set) # all p@k of instances in one fold and one k_evaluation_set
+# p_at_k_overall = dblp_eval.init_eval_holder(evaluation_k_set) # overall p@k of instances in one fold and one k_evaluation_set
 r_at_k_all = dblp_eval.init_eval_holder(evaluation_k_set) # all r@k of instances in one fold and one k_evaluation_set
 r_at_k_overall = dblp_eval.init_eval_holder(evaluation_k_set) # overall r@k of instances in one fold and one k_evaluation_set
 
@@ -135,7 +135,7 @@ for train_index, test_index in cv.split(x):
     # decoder = Model(encoded_input, decoder_layer(decoder_hidden(encoded_input)))
     # decoder = Model(encoded_input, decoder_layer(encoded_input))
 
-    autoencoder.compile(optimizer='adaGrad', loss='mean_absolute_error')
+    autoencoder.compile(optimizer='adagrad', loss='mean_absolute_error')
 
     # x_train = x_train.astype('float32') / 255.
     # x_test = x_test.astype('float32') / 255.
@@ -186,28 +186,29 @@ for train_index, test_index in cv.split(x):
     print("Evaluation on last batch of train data.")
     for k in evaluation_k_set:
         # p@k evaluation
-        print("Evaluating p@k for top {} records in fold {}.".format(k, fold_counter))
-        p_at_k, p_at_k_array = dblp_eval.p_at_k(autoencoder.predict(x_train_batch), y_train_batch, k=k)
-        p_at_k_overall_train[k].append(p_at_k)
-        p_at_k_all_train[k].append(p_at_k_array)
+        # print("Evaluating p@k for top {} records in fold {}.".format(k, fold_counter))
+        # p_at_k, p_at_k_array = dblp_eval.p_at_k(autoencoder.predict(x_train_batch), y_train_batch, k=k)
+        # p_at_k_overall_train[k].append(p_at_k)
+        # p_at_k_all_train[k].append(p_at_k_array)
         # r@k evaluation
         print("Evaluating r@k for top {} records in fold {}.".format(k, fold_counter))
         r_at_k, r_at_k_array = dblp_eval.r_at_k(autoencoder.predict(x_train_batch), y_train_batch, k=k)
         r_at_k_overall_train[k].append(r_at_k)
         r_at_k_all_train[k].append(r_at_k_array)
 
-        print("For top {} in Train data:\nP@{}:{}\nR@{}:{}".format(k, k, p_at_k, k, r_at_k))
+        # print("For top {} in Train data:\nP@{}:{}\nR@{}:{}".format(k, k, p_at_k, k, r_at_k))
+        print("For top {} in Train data: R@{}:{}".format(k, k, r_at_k))
 
     # @k evaluation process for test data
     print("Evaluation on test data.")
     for k in evaluation_k_set:
         # p@k evaluation
-        print("Evaluating p@k for top {} records in fold {}.".format(k, fold_counter))
-        p_at_k, p_at_k_array = dblp_eval.p_at_k(autoencoder.predict(
-            np.asarray([x_test_record.todense() for x_test_record in x_test]).reshape(x_test.__len__(), -1)),
-            np.asarray([y_test_record.todense() for y_test_record in y_test]).reshape(y_test.__len__(), -1), k=k)
-        p_at_k_overall[k].append(p_at_k)
-        p_at_k_all[k].append(p_at_k_array)
+        # print("Evaluating p@k for top {} records in fold {}.".format(k, fold_counter))
+        # p_at_k, p_at_k_array = dblp_eval.p_at_k(autoencoder.predict(
+        #     np.asarray([x_test_record.todense() for x_test_record in x_test]).reshape(x_test.__len__(), -1)),
+        #     np.asarray([y_test_record.todense() for y_test_record in y_test]).reshape(y_test.__len__(), -1), k=k)
+        # p_at_k_overall[k].append(p_at_k)
+        # p_at_k_all[k].append(p_at_k_array)
         # r@k evaluation
         print("Evaluating r@k for top {} records in fold {}.".format(k, fold_counter))
         r_at_k, r_at_k_array = dblp_eval.r_at_k(autoencoder.predict(
@@ -216,7 +217,8 @@ for train_index, test_index in cv.split(x):
         r_at_k_overall[k].append(r_at_k)
         r_at_k_all[k].append(r_at_k_array)
 
-        print("For top {} in Test data:\nP@{}:{}\nR@{}:{}".format(k, k, p_at_k, k, r_at_k))
+        # print("For top {} in Test data:\nP@{}:{}\nR@{}:{}".format(k, k, p_at_k, k, r_at_k))
+        print("For top {} in Test data: R@{}:{}".format(k, k, r_at_k))
 
     # Sampleset for sketch
     # with open('../Backyard/x_sampleset.pkl', 'wb') as f:
@@ -265,16 +267,17 @@ for train_index, test_index in cv.split(x):
     K.clear_session()
 
     # Saving evaluation data
-    dblp_eval.save_record(p_at_k_all_train, '{}_p@k_all_train_Time{}'.format(dataset_name, time_str))
-    dblp_eval.save_record(p_at_k_overall_train, '{}_p@k_train_Time{}'.format(dataset_name, time_str))
+    # dblp_eval.save_record(p_at_k_all_train, '{}_p@k_all_train_Time{}'.format(dataset_name, time_str))
+    # dblp_eval.save_record(p_at_k_overall_train, '{}_p@k_train_Time{}'.format(dataset_name, time_str))
     dblp_eval.save_record(r_at_k_all_train, '{}_r@k_all_train_Time{}'.format(dataset_name, time_str))
-    dblp_eval.save_record(p_at_k_overall_train, '{}_r@k_train_Time{}'.format(dataset_name, time_str))
+    dblp_eval.save_record(r_at_k_overall_train, '{}_r@k_train_Time{}'.format(dataset_name, time_str))
 
-    dblp_eval.save_record(p_at_k_all, '{}_p@k_all_Time{}'.format(dataset_name, time_str))
-    dblp_eval.save_record(p_at_k_overall, '{}_p@k_Time{}'.format(dataset_name, time_str))
+    # dblp_eval.save_record(p_at_k_all, '{}_p@k_all_Time{}'.format(dataset_name, time_str))
+    # dblp_eval.save_record(p_at_k_overall, '{}_p@k_Time{}'.format(dataset_name, time_str))
     dblp_eval.save_record(r_at_k_all, '{}_r@k_all_Time{}'.format(dataset_name, time_str))
-    dblp_eval.save_record(p_at_k_overall, '{}_r@k_Time{}'.format(dataset_name, time_str))
+    dblp_eval.save_record(r_at_k_overall, '{}_r@k_Time{}'.format(dataset_name, time_str))
 
-    print('Evaluation records are saved successfully.')
+    print('Evaluation records are saved successfully for fold #{}'.format(fold_counter))
 
     fold_counter += 1
+    break

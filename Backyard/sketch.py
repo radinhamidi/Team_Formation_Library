@@ -1,6 +1,6 @@
 '''
 These are our options:
-k-sparse - Done - Under run
+k-sparse - Done - Did not work on test data - probably not extract concept
 L1 regularization - Done - Didnt work that much
 KL Regularization - Done - Worked
 Custom optimization function
