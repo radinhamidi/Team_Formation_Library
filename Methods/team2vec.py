@@ -7,7 +7,7 @@ Created on Thursday Nov 21 2019
 
 import gensim, numpy, pylab, random
 import os, getopt, sys, multiprocessing
-
+sys.path.extend(['./../team_formation'])
 from Common.tsne import tsne, pca
 # teams as documents, members as words
 # doc_list = ['u1 u2 u3','u2 u3','u1 u2 u1 u2']
