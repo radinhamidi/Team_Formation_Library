@@ -6,22 +6,21 @@ import matplotlib.pyplot as plt
 from copy import deepcopy
 from sklearn import preprocessing
 import itertools
-import timeit
-from enum import Enum,auto
-from scipy.special import expit
-import csv
-from itertools import groupby
-import pandas
+import keras
+import glob
 
 
-def crossValidate(data:np.ndarray, split1, split2):
+def crossValidate(data: np.ndarray, split1, split2):
     data = np.asarray(data)
     m = data.__len__()
     idx = np.random.permutation(m)
     data = data[idx]
-    return data[:int(split1*m),:], data[int(split1*m):int((split1+split2)*m),:], data[int((split1+split2)*m):,:], idx
+    return data[:int(split1 * m), :], data[int(split1 * m):int((split1 + split2) * m), :], data[
+                                                                                           int((split1 + split2) * m):,
+                                                                                           :], idx
 
-def kfold(data:np.ndarray, k):
+
+def kfold(data: np.ndarray, k):
     m = data.__len__()
     idx = np.random.permutation(m)
     kfoldData = []
@@ -30,14 +29,16 @@ def kfold(data:np.ndarray, k):
         validation = [x for j, x in enumerate(idx) if j % k == i]
         train = data[training]
         test = data[validation]
-        kfoldData.append([train,test])
+        kfoldData.append([train, test])
     return np.asarray(kfoldData), idx
+
 
 def scale(x):
     return preprocessing.scale(x)
 
-def SVD_compress(x,accuracy):
-    m,n = x.shape
+
+def SVD_compress(x, accuracy):
+    m, n = x.shape
     [U, S, V] = scipy.linalg.svd(x, full_matrices=False)
     # print("Result of close test by numpy package for new data vectors and original one: ",np.allclose(x, np.dot(U * S, V)))
     sigmaSumThreshold = float(accuracy * np.sum(S))
@@ -50,8 +51,11 @@ def SVD_compress(x,accuracy):
     S = S[0:i]
     U = U[:, 0:i]
     V = V[0:i, :]
-    print("Dimension reduction with SVD went from {} to {} when {}% of eigen values have already saved.".format(n,featurelength,accuracy * 100))
-    return  U * S, [U,S,V]
+    print("Dimension reduction with SVD went from {} to {} when {}% of eigen values have already saved.".format(n,
+                                                                                                                featurelength,
+                                                                                                                accuracy * 100))
+    return U * S, [U, S, V]
+
 
 def normalize(x):
     x_scaled = deepcopy(x)
@@ -65,11 +69,12 @@ def normalize(x):
             pass
     return x_scaled
 
+
 def plot_confusion_matrix(cm, class_names,
                           normalize=False,
                           title='Confusion matrix',
                           cmap=plt.cm.Blues):
-    #alternate cmap : YlOrRd
+    # alternate cmap : YlOrRd
     """
     This function prints and plots the confusion matrix.
     Normalization can be applied by setting `normalize=True`.
@@ -100,3 +105,14 @@ def plot_confusion_matrix(cm, class_names,
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
 
+
+def pick_model_weights(model: keras.models.Model, dataset_name, path='../Output/Models/Weights'):
+    model_names = []
+    for path in glob.glob('{}/{}_*.h5'.format(path, dataset_name)):
+        model_names.append(path)
+    print('Please enter you model number form list below:')
+    for i, path in enumerate(model_names):
+        print('{}. {}'.format(i + 1, path))
+    model_number = int(input('?')) - 1
+    model.load_weights(model_names[model_number])
+    return model

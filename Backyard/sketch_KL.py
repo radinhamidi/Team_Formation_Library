@@ -57,7 +57,7 @@ lambda_val = 0.001  # Weight decay , refer : https://stackoverflow.com/questions
 # Custom Regularizer function
 def sparse_reg(activ_matrix):
     p = 0.01
-    beta = 3
+    beta = 7
     p_hat = K.mean(activ_matrix)  # average over the batch samples
     print("p_hat = ", p_hat)
     # KLD = p*(K.log(p)-K.log(p_hat)) + (1-p)*(K.log(1-p)-K.log(1-p_hat))
