@@ -17,14 +17,16 @@ class Team2Vec:
     def __init__(self):
         self.teams = []
 
-    def init(self, team_matrix):
+    def init(self, team_matrix, member_type='user'):#member_type={'user','skill'}
         teams_label = []
         # teams_skils = []
         teams_members = []
         for team in team_matrix:
             teams_label.append(team[0])
-            # teams_skils.append(record[1].col)
-            teams_members.append(team[2].col)
+            if member_type == 'skill':
+                teams_members.append(team[1].col)
+            else: #member_type == 'user'
+                teams_members.append(team[2].col)
 
         for index, team in enumerate(teams_members):
             td = gensim.models.doc2vec.TaggedDocument([str(m) for m in team], [
@@ -171,18 +173,22 @@ if __name__ == "__main__":
 
     t2v = Team2Vec()
 
+    help_str = 'team2vec.py [-m] [-s] [-d <dimension=100>] [-w <window=2>] \n-m: distributed memory mode; default=distributed bag of members\n-s: member type = skill; default = user'
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hmd:w:", ["dimension=", "window="])
+        opts, args = getopt.getopt(sys.argv[1:], "hmsd:w:", ["dimension=", "window="])
     except getopt.GetoptError:
-        print('team2vec.py -m -d <dimension> -w <window>')
+        print(help_str)
         sys.exit(2)
     dimension = 100
     window = 2
-    dm = 1
+    dm = 0
+    member_type = 'user'
     for opt, arg in opts:
         if opt == '-h':
-            print('team2vec.py -m -d <dimension> -w <window>')
+            print(help_str)
             sys.exit()
+        elif opt == '-s':
+            member_type = 'skill'
         elif opt == '-m':
             dm = 1
         elif opt in ("-d", "--dimension"):
@@ -190,7 +196,7 @@ if __name__ == "__main__":
         elif opt in ("-w", "--window"):
             window = int(arg)
 
-    t2v.init(team_matrix)
+    t2v.init(team_matrix, member_type=member_type)
     t2v.train(dimension=dimension, window=window, dist_mode=dm, output='./Output/Team2Vec/', epochs=100)
     t2v.plot_model('pca', output='./Output/Team2Vec/')
     t2v.plot_model('tsne', output='./Output/Team2Vec/')
