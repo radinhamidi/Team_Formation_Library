@@ -15,6 +15,7 @@ from keras import regularizers
 
 ######## Definitions
 dataset_name = 'DBLP'
+method_name = 'KL'
 seed = 7
 epochs_in_batch = 2
 epochs_overall = 2
@@ -34,7 +35,7 @@ encoding_dim = 4000  # encoded size
 np.random.seed(seed)
 print(K.tensorflow_backend._get_available_gpus())
 
-if dblp.ae_data_exist():
+if dblp.ae_data_exist(file_path='../Dataset/ae_dataset.pkl'):
     dataset = dblp.load_ae_dataset()
 else:
     dblp.extract_data(filter_journals=True, skill_size_filter=min_skill_size, member_size_filter=min_member_size)
@@ -208,15 +209,15 @@ for train_index, test_index in cv.split(x):
 
     # model_name = input('Please enter autoencoder model name:')
 
-    with open('../Output/Models/{}_Time{}_Fold{}.json'.format(dataset_name, time_str, fold_counter), "w") as json_file:
+    with open('../Output/Models/{}_{}_Time{}_Fold{}.json'.format(dataset_name, method_name, time_str, fold_counter), "w") as json_file:
         json_file.write(model_json)
 
     autoencoder.save_weights(
-        "../Output/Models/Weights/{}_Time{}_Fold{}.h5".format(dataset_name, time_str, fold_counter))
+        "../Output/Models/Weights/{}_{}_Time{}_Fold{}.h5".format(dataset_name, method_name, time_str, fold_counter))
 
     with open(
-            '../Output/Models/{}_Time{}_EncodingDim{}_Fold{}_Loss{}_Epoch{}(overall{}xinner{})_kFold{}_BatchBP{}_BatchTraining{}.txt'
-                    .format(dataset_name, time_str, encoding_dim, fold_counter, int(score * 1000),
+            '../Output/Models/{}_{}_Time{}_EncodingDim{}_Fold{}_Loss{}_Epoch{}(overall{}xinner{})_kFold{}_BatchBP{}_BatchTraining{}.txt'
+                    .format(dataset_name, method_name, time_str, encoding_dim, fold_counter, int(score * 1000),
                             epochs_in_batch * epochs_overall, epochs_in_batch, epochs_overall,
                             k_fold, back_propagation_batch_size, training_batch_size), 'w') as f:
         with redirect_stdout(f):
@@ -234,13 +235,13 @@ for train_index, test_index in cv.split(x):
     # Saving evaluation data
     # dblp_eval.save_record(p_at_k_all_train, '{}_p@k_all_train_Time{}'.format(dataset_name, time_str))
     # dblp_eval.save_record(p_at_k_overall_train, '{}_p@k_train_Time{}'.format(dataset_name, time_str))
-    dblp_eval.save_record(r_at_k_all_train, '{}_r@k_all_train_Time{}'.format(dataset_name, time_str))
-    dblp_eval.save_record(r_at_k_overall_train, '{}_r@k_train_Time{}'.format(dataset_name, time_str))
+    dblp_eval.save_record(r_at_k_all_train, '{}_{}_r@k_all_train_Time{}'.format(dataset_name, method_name, time_str))
+    dblp_eval.save_record(r_at_k_overall_train, '{}_{}_r@k_train_Time{}'.format(dataset_name, method_name, time_str))
 
     # dblp_eval.save_record(p_at_k_all, '{}_p@k_all_Time{}'.format(dataset_name, time_str))
     # dblp_eval.save_record(p_at_k_overall, '{}_p@k_Time{}'.format(dataset_name, time_str))
-    dblp_eval.save_record(r_at_k_all, '{}_r@k_all_Time{}'.format(dataset_name, time_str))
-    dblp_eval.save_record(r_at_k_overall, '{}_r@k_Time{}'.format(dataset_name, time_str))
+    dblp_eval.save_record(r_at_k_all, '{}_{}_r@k_all_Time{}'.format(dataset_name, method_name, time_str))
+    dblp_eval.save_record(r_at_k_overall, '{}_{}_r@k_Time{}'.format(dataset_name, method_name, time_str))
 
     print('Evaluation records are saved successfully for fold #{}'.format(fold_counter))
 

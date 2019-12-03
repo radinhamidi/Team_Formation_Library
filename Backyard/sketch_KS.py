@@ -17,8 +17,10 @@ with open(fay, 'rb') as f:
     y = pkl.load(f)
 
 # Variables
-train_ratio = 0.7
-validation_ratio = 0.2
+seed = 7
+np.random.seed(seed)
+train_ratio = 0.8
+validation_ratio = 0.0
 batch_sizes = 8
 epochs = 10
 embedding_size = 3000

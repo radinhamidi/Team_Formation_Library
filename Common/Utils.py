@@ -8,6 +8,7 @@ from sklearn import preprocessing
 import itertools
 import keras
 import glob
+from Methods.team2vec import *
 
 
 def crossValidate(data: np.ndarray, split1, split2):
@@ -115,4 +116,16 @@ def pick_model_weights(model: keras.models.Model, dataset_name, path='../Output/
         print('{}. {}'.format(i + 1, path))
     model_number = int(input('?')) - 1
     model.load_weights(model_names[model_number])
+    return model
+
+
+def load_T2V_model(model: Team2Vec, path='../Output/Models/T2V'):
+    model_names = []
+    for path in glob.glob('{}/model_*'.format(path)):
+        model_names.append(path)
+    print('Please enter you model number form list below:')
+    for i, path in enumerate(model_names):
+        print('{}. {}'.format(i + 1, path))
+    model_number = int(input('?')) - 1
+    model.load_model(model_names[model_number])
     return model

@@ -2,5 +2,3 @@ Todo
 Check SGD with crop
 Check Custom function for model
 Check KL with different configs
-Add load model to dblp method - Done
-Check sequence of training: epochs inside each batch or epoch over batches too - Done

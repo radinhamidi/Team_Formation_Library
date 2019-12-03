@@ -1,6 +1,8 @@
 from Common.Utils import *
 from os import path
+from Methods.team2vec import *
 from scipy import sparse
+import pandas
 
 publication_filter = ['sigmod', 'vldb', 'icde', 'icdt', 'edbt', 'pods', 'kdd', 'www',
                       'sdm', 'pkdd', 'icdm', 'cikm', 'aaai', 'icml', 'ecml', 'colt',
@@ -189,8 +191,8 @@ def extract_data(filter_journals=False, size_limit=np.inf, skill_size_filter=0, 
         print('{} records saved to {} successfully.'.format(counter + 1, output_dir))
 
 
-def load_ae_dataset(dir='../Dataset/ae_dataset.pkl'):
-    with open(dir, 'rb') as f:
+def load_ae_dataset(file_path='../Dataset/ae_dataset.pkl'):
+    with open(file_path, 'rb') as f:
         dataset = pickle.load(f)
     return dataset
 
@@ -226,3 +228,35 @@ def batch_generator(iterable, n=10):
     for ndx in range(0, l, n):
         batch_length = min(ndx + n, l) - ndx
         yield np.asarray([record.todense() for record in iterable[ndx:min(ndx + n, l)]]).reshape(batch_length, -1)
+
+
+def nn_t2v_dataset_generator(model: Team2Vec, dataset, file_path='../Dataset/ae_t2v_dataset.pkl'):
+    t2v_dataset = []
+    counter = 1
+    for record in dataset:
+        try:
+            id = record[0]
+            skill_vec = record[1].todense()
+            team_vec = model.get_team_vec(id)
+            t2v_dataset.append([id, skill_vec, team_vec])
+            print('Record #{} | File #{} appended to dataset.'.format(counter, id))
+            counter += 1
+        except:
+            pass
+    with open(file_path, 'wb') as f:
+        pickle.dump(t2v_dataset, f)
+
+
+def get_memebrID_by_teamID(preds_ids):
+    dataset = load_ae_dataset(file_path='../Dataset/ae_dataset.pkl')
+    dataset = np.asarray(dataset)
+    preds_authors_ids = []
+    for pred_ids in preds_ids:
+        authors_ids = []
+        for id in pred_ids:
+            try:
+                authors_ids.extend(np.nonzero(dataset[np.where(dataset[:, 0] == id), 2][0][0].todense())[1])
+            except:
+                print('Cannot find team for sample with id: {}'.format(id))
+        preds_authors_ids.append(authors_ids)
+    return preds_authors_ids

@@ -165,7 +165,7 @@ class Team2Vec:
 
 if __name__ == "__main__":
     import DataAccessLayer.load_dblp_data as dblp
-    if dblp.ae_data_exist():
+    if dblp.ae_data_exist(file_path='../Dataset/ae_dataset.pkl'):
         team_matrix = dblp.load_ae_dataset()
     else:
         dblp.extract_data(filter_journals=True)

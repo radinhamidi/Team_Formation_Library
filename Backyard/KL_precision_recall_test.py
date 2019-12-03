@@ -11,6 +11,10 @@ import Evaluation. plotter
 from Common.Utils import crossValidate
 from Evaluation import plotter
 
+seed = 7
+np.random.seed(seed)
+
+
 fax = './x_sampleset.pkl'
 fay = './y_sampleset.pkl'
 with open(fax, 'rb') as f:
@@ -19,8 +23,8 @@ with open(fay, 'rb') as f:
     y = pkl.load(f)
 
 # Variables
-train_ratio = 0.7
-validation_ratio = 0.2
+train_ratio = 0.8
+validation_ratio = 0.0
 epochs = 30
 batch_sizes = 8
 sp = 0.01
@@ -33,6 +37,8 @@ x_train, x_validate, x_test, ids = crossValidate(x, train_ratio, validation_rati
 y_train = y[ids[0:int(y.__len__() * train_ratio)]]
 y_validate = y[ids[int(y.__len__() * train_ratio):int(y.__len__() * (train_ratio + validation_ratio))]]
 y_test = y[ids[int(y.__len__() * (train_ratio + validation_ratio)):]]
+
+
 
 
 input_dim = x_train.shape[1]
@@ -82,7 +88,7 @@ autoencoder.load_weights('./KL.h5')
 
 y_pred = autoencoder.predict(x_test)
 
-k_set = np.arange(10, 10000, 10)
+k_set = np.arange(1, 51, 1)
 p_at_k = dblp_eval.init_eval_holder(k_set) # all p@k of instances in one fold and one k_evaluation_set
 r_at_k = dblp_eval.init_eval_holder(k_set) # all p@k of instances in one fold and one k_evaluation_set
 for k in k_set:
@@ -129,4 +135,4 @@ plotter.plot_at_k(k_set, r_at_k, 'Recall@k')
 
 r_at_k_name = str(input('File name for saving R@K?'))
 with open('./{}.pkl'.format(r_at_k_name), 'wb') as f:
-    pkl.dump(r_at_k)
+    pkl.dump(r_at_k, f)

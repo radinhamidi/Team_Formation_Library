@@ -31,8 +31,10 @@ with open(fay, 'rb') as f:
     y = pkl.load(f)
 
 # Variables
-train_ratio = 0.7
-validation_ratio = 0.2
+seed = 7
+np.random.seed(seed)
+train_ratio = 0.8
+validation_ratio = 0.0
 epochs = 200
 batch_sizes = 8
 sp = 0.01
@@ -60,14 +62,12 @@ y_train = y[ids[0:int(y.__len__() * train_ratio)]]
 y_validate = y[ids[int(y.__len__() * train_ratio):int(y.__len__() * (train_ratio + validation_ratio))]]
 y_test = y[ids[int(y.__len__() * (train_ratio + validation_ratio)):]]
 
-
 input_dim = x_train.shape[1]
 output_dim = y_train.shape[1]
 print("Input/Output dimensions ", input_dim, output_dim)
 # this is our input placeholder
 input_img = Input(shape=(input_dim,))
 lambda_val = 0.001  # Weight decay , refer : https://stackoverflow.com/questions/44495698/keras-difference-between-kernel-and-activity-regularizers
-
 
 encoded = Dense(encoding_dim,
                 activation='sigmoid')(input_img)
@@ -78,22 +78,24 @@ decoded = Dense(output_dim,
 
 # Define custom loss
 def custom_loss(y_true, y_pred):
+    # custom function here
     return K.mean((y_pred - y_true), axis=-1)
 
-autoencoder = Model(input_img, decoded)
-sgd = keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True, clipnorm = 1, clipvalue = 0.5)
-autoencoder.compile(optimizer=sgd, loss=custom_loss)
 
+autoencoder = Model(input_img, decoded)
+# sgd = keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+sgd = keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True, clipnorm=1, clipvalue=0.5)
+# autoencoder.compile(optimizer=sgd, loss=custom_loss)
+autoencoder.compile(optimizer=sgd, loss='binary_crossentropy')
 
 # Removing normalization since using MSE - later
-x_train = x_train.astype('float32')
-x_test = x_test.astype('float32')
+# x_train = x_train.astype('float32')
+# x_test = x_test.astype('float32')
 
 x_train = x_train.reshape((len(x_train), np.prod(x_train.shape[1:])))
 x_test = x_test.reshape((len(x_test), np.prod(x_test.shape[1:])))
 print(x_train.shape)
 print(x_test.shape)
-
 
 autoencoder.fit(x_train, y_train,
                 epochs=epochs,
@@ -104,20 +106,25 @@ autoencoder.fit(x_train, y_train,
 
 print(autoencoder.summary())
 
-
 evaluation_k_set = np.arange(10, 1100, 100)
 
 # Defining evaluation scores holders for train data
-p_at_k_all_train = dblp_eval.init_eval_holder(evaluation_k_set) # all p@k of instances in one fold and one k_evaluation_set
-p_at_k_overall_train = dblp_eval.init_eval_holder(evaluation_k_set) # overall p@k of instances in one fold and one k_evaluation_set
-r_at_k_all_train = dblp_eval.init_eval_holder(evaluation_k_set) # all r@k of instances in one fold and one k_evaluation_set
-r_at_k_overall_train = dblp_eval.init_eval_holder(evaluation_k_set) # overall r@k of instances in one fold and one k_evaluation_set
+p_at_k_all_train = dblp_eval.init_eval_holder(
+    evaluation_k_set)  # all p@k of instances in one fold and one k_evaluation_set
+p_at_k_overall_train = dblp_eval.init_eval_holder(
+    evaluation_k_set)  # overall p@k of instances in one fold and one k_evaluation_set
+r_at_k_all_train = dblp_eval.init_eval_holder(
+    evaluation_k_set)  # all r@k of instances in one fold and one k_evaluation_set
+r_at_k_overall_train = dblp_eval.init_eval_holder(
+    evaluation_k_set)  # overall r@k of instances in one fold and one k_evaluation_set
 
 # Defining evaluation scores holders for test data
-p_at_k_all = dblp_eval.init_eval_holder(evaluation_k_set) # all p@k of instances in one fold and one k_evaluation_set
-p_at_k_overall = dblp_eval.init_eval_holder(evaluation_k_set) # overall p@k of instances in one fold and one k_evaluation_set
-r_at_k_all = dblp_eval.init_eval_holder(evaluation_k_set) # all r@k of instances in one fold and one k_evaluation_set
-r_at_k_overall = dblp_eval.init_eval_holder(evaluation_k_set) # overall r@k of instances in one fold and one k_evaluation_set
+p_at_k_all = dblp_eval.init_eval_holder(evaluation_k_set)  # all p@k of instances in one fold and one k_evaluation_set
+p_at_k_overall = dblp_eval.init_eval_holder(
+    evaluation_k_set)  # overall p@k of instances in one fold and one k_evaluation_set
+r_at_k_all = dblp_eval.init_eval_holder(evaluation_k_set)  # all r@k of instances in one fold and one k_evaluation_set
+r_at_k_overall = dblp_eval.init_eval_holder(
+    evaluation_k_set)  # overall r@k of instances in one fold and one k_evaluation_set
 
 # @k evaluation process for last train batch data
 print("Evaluation on train data.")

@@ -17,13 +17,16 @@ with open(fay, 'rb') as f:
     y = pkl.load(f)
 
 # Variables
-train_ratio = 0.7
-validation_ratio = 0.2
+seed = 7
+np.random.seed(seed)
+train_ratio = 0.8
+validation_ratio = 0.0
 epochs = 30
 batch_sizes = 8
 sp = 0.01
 b_val = 3  # Controls the acitvity of the hidden layer nodes
 encoding_dim = 3500
+
 
 # from keras.callbacks import ModelCheckpoint
 # from keras.models import Model, load_model, save_model, Sequential
