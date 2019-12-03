@@ -1,4 +1,6 @@
 Todo
-Check SGD with crop
+
 Check Custom function for model
-Check KL with different configs
+T2V Team Mode evaluation
+T2V dataset generation no document bug
+T2V Skill embedding training
