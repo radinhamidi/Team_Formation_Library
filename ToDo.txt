@@ -1,6 +1,7 @@
 Todo
-
-Check Custom function for model
-T2V Team Mode evaluation
 T2V dataset generation no document bug
+T2V Team Mode evaluation
+Table of R@k
+Other metrics like nDCG or MAP
 T2V Skill embedding training
+Check Custom function for model
