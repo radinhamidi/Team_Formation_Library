@@ -1,7 +1,7 @@
 Todo
-T2V dataset generation no document bug
-T2V Team Mode evaluation
-Table of R@k
-Other metrics like nDCG or MAP
-T2V Skill embedding training
-Check Custom function for model
+1- T2V dataset generation "no document tag" bug fix
+2- Create a table for R@k for different models
+3- Adding other metrics like nDCG or MAP
+4- T2V Team Mode evaluation
+5- T2V Skill embedding training
+6- Check Custom function for model
