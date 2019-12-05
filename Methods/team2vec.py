@@ -5,9 +5,10 @@ Created on Thursday Nov 21 2019
 @author: Hossein Fani (sites.google.com/site/hosseinfani/)
 """
 
-import gensim, numpy, pylab, random
+import gensim, numpy, pylab, random, pickle
 import os, getopt, sys, multiprocessing
 sys.path.extend(['./../team_formation'])
+
 from Common.tsne import tsne, pca
 # teams as documents, members as words
 # doc_list = ['u1 u2 u3','u2 u3','u1 u2 u1 u2']
@@ -32,7 +33,7 @@ class Team2Vec:
             td = gensim.models.doc2vec.TaggedDocument([str(m) for m in team], [
                 str(teams_label[index])])  # the f*ing [] is needed to surround the tags!
             self.teams.append(td)
-        print('#teams loaded: %s' % len(self.teams))
+        print('#teams loaded: {}; member type = {}'.format(len(self.teams), member_type))
 
     def train(self, dimension=300, window=2, dist_mode=1, epochs=100, output='./'):
 
@@ -74,28 +75,43 @@ class Team2Vec:
             self.model.min_alpha = self.model.alpha  # fix the learning rate, no decay
 
         if output:
+            with open('{}teams_{}'.format(output, self.settings)) as f:
+                pickle.dump(self.teams, f)
             self.model.save('{}model_{}'.format(output, self.settings))
             self.model.save_word2vec_format('{}members2vec_{}'.format(output, self.settings))
             self.model.docvecs.save_word2vec_format('{}team2vec_{}'.format(output, self.settings))
             print('Model saved for {} under directory {}'.format(self.settings, output))
 
+    def get_teams(self):
+        return self.model.docvecs.doctags
+
+    def get_members(self):
+        return self.model.wv.vocab
+
+    def get_team_members(self):
+        pass
+
     def get_member_vec(self, mid):
-        return self.model[mid]
+        return self.model[str(mid)]
 
     def get_team_vec(self, tid):
-        return self.model.docvecs[tid]
+        return self.model.docvecs[str(tid)]
 
     def get_member_similarity(self, m1, m2):
-        return self.model.most_similarity(m1, m2)
+        return self.model.wv.similarity(str(m1), str(m2))
 
     def get_team_similarity(self, t1, t2):
-        return self.model.docvecs.similarity(t1, t2)
+        return self.model.docvecs.similarity(str(t1), str(t2))
 
-    def get_team_most_similar(self, teamid, topn=10):
-        return self.model.docvecs.most_similar(teamid, topn=topn)
+    def get_team_most_similar(self, tid, topn=10):
+        return self.model.docvecs.most_similar(str(tid), topn=topn)
 
-    def load_model(self, modelfile):
+    def load_model(self, modelfile, includeTeams=False):
+        #ModuleNotFoundError: No module named 'numpy.random._pickle': numpy version conflict when saving and loading
         self.model = gensim.models.Doc2Vec.load(modelfile)
+        if includeTeams:
+            with open(modelfile.replace('model', 'teams')) as f:
+                self.teams = pickle.load(f)
 
     def get_member_most_similar_by_vector(self, mvec, topn=10):
         return self.model.wv.similar_by_vector(mvec, topn=topn)
@@ -163,7 +179,8 @@ class Team2Vec:
             pylab.savefig('{}teams_members_{}_{}.png'.format(output, method, self.settings))
         pylab.close()
 
-if __name__ == "__main__":
+
+def main_train_team2vec():
     import DataAccessLayer.load_dblp_data as dblp
     if dblp.ae_data_exist(file_path='../Dataset/ae_dataset.pkl'):
         team_matrix = dblp.load_ae_dataset()
@@ -201,12 +218,29 @@ if __name__ == "__main__":
     t2v.plot_model('pca', output='./Output/Team2Vec/')
     t2v.plot_model('tsne', output='./Output/Team2Vec/')
 
-    #sample running string
-    #python3 -u ./Methods/team2vec.py -d 500 -w 2 -m 2>&1 |& tee  ./Output/Team2Vec/log_d500_w2_m1.txt
+    # sample running string
+    # python3 -u ./Methods/team2vec.py -d 500 -w 2 -m 2>&1 |& tee  ./Output/Team2Vec/log_d500_w2_m1.txt
 
-    #test
+    # test
     # t2v.init(random.sample(team_matrix, 100))
     # t2v.train(dimension=100, window=2, dist_mode=1, output='./Output/Team2Vec/', epochs=10)
     # t2v.plot_model('pca', output='./Output/Team2Vec/')
     # t2v.plot_model('tsne', output='./Output/Team2Vec/')
+
+
+if __name__ == "__main__":
+    main_train_team2vec()
+
+    # t2v = Team2Vec()
+    # t2v.load_model('./Output/Team2Vec/team_user/model_d500_w2_m1')
+    # with open('./Dataset/ae_dataset.pkl', 'rb') as f:
+    #     team_matrix = pickle.load(f)
+    # for r in team_matrix:
+    #     try:
+    #         id = r[0]
+    #         team_vec = t2v.get_team_vec(id)
+    #         team_vec = t2v.get_teams()[str(id)]
+    #     except:
+    #         print('{} not found!'.format(id))
+
 
