@@ -5,3 +5,4 @@ Todo
 4- T2V Team Mode evaluation
 5- T2V Skill embedding training
 6- Check Custom function for model
+https://github.com/buaaliuming/Resources-for-Scholarly-Big-Data

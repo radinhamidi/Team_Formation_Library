@@ -230,32 +230,35 @@ def batch_generator(iterable, n=10):
         yield np.asarray([record.todense() for record in iterable[ndx:min(ndx + n, l)]]).reshape(batch_length, -1)
 
 
-def nn_t2v_dataset_generator(model: Team2Vec, dataset, file_path='../Dataset/ae_t2v_dataset.pkl'):
+def nn_t2v_dataset_generator(model: Team2Vec, dataset, file_path):
     t2v_dataset = []
     counter = 1
     for record in dataset:
+        id = record[0]
         try:
-            id = record[0]
             skill_vec = record[1].todense()
             team_vec = model.get_team_vec(id)
             t2v_dataset.append([id, skill_vec, team_vec])
             print('Record #{} | File #{} appended to dataset.'.format(counter, id))
             counter += 1
         except:
-            pass
+            print('Cannot add record with id {}'.format(id))
     with open(file_path, 'wb') as f:
         pickle.dump(t2v_dataset, f)
 
 
 def get_memebrID_by_teamID(preds_ids):
     dataset = load_ae_dataset(file_path='../Dataset/ae_dataset.pkl')
-    dataset = np.asarray(dataset)
+    dataset = pandas.DataFrame(dataset, columns=['id', 'skill', 'author'])
     preds_authors_ids = []
     for pred_ids in preds_ids:
         authors_ids = []
         for id in pred_ids:
             try:
-                authors_ids.extend(np.nonzero(dataset[np.where(dataset[:, 0] == id), 2][0][0].todense())[1])
+                found_record = dataset.loc[dataset['id'] == id]['author']
+                sparse_authors = sparse.coo_matrix(found_record.values.all())
+                author_ids = sparse_authors.nonzero()[1]
+                authors_ids.extend(author_ids)
             except:
                 print('Cannot find team for sample with id: {}'.format(id))
         preds_authors_ids.append(authors_ids)

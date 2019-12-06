@@ -18,7 +18,7 @@ def r_at_k(prediction, true, k=10):
         for t_index in t_indices:
             if t_index in pred_indices:
                 recall += 1
-        all_recall.append(recall/t_indices.__len__())
+        all_recall.append(recall / t_indices.__len__())
     return np.mean(all_recall), all_recall
 
 
@@ -37,7 +37,7 @@ def p_at_k(prediction, true, k=10):
         for pred_index in pred_indices:
             if pred_index in t_indices:
                 precision += 1
-        all_precision.append(precision/pred_indices.__len__())
+        all_precision.append(precision / pred_indices.__len__())
     return np.mean(all_precision), all_precision
 
 
@@ -50,17 +50,17 @@ def init_eval_holder(evaluation_k_set=None):
         dict[k] = []
     return dict
 
+
 def save_record(dict, dict_name, dir='../Output/'):
-   json.dump(str(dict), open(dir+dict_name+'.json', 'w'))
+    json.dump(str(dict), open(dir + dict_name + '.json', 'w'))
 
 
 def r_at_k_t2v(prediction, true, k=10):
     all_recall = []
     for pred, t in zip(prediction, true):
-        t = np.asarray(t)
+        t_indices = np.nonzero(t[0])[1]
         pred_indices = np.asarray(pred[:k])
 
-        t_indices = np.argwhere(t)
         if t_indices.__len__() == 0:
             continue
 
@@ -68,6 +68,5 @@ def r_at_k_t2v(prediction, true, k=10):
         for t_index in t_indices:
             if t_index in pred_indices:
                 recall += 1
-        all_recall.append(recall/t_indices.__len__())
+        all_recall.append(recall / t_indices.__len__())
     return np.mean(all_recall), all_recall
-    pass

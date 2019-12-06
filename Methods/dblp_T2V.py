@@ -17,7 +17,7 @@ from keras import regularizers
 dataset_name = 'DBLP'
 method_name = 'T2V'
 seed = 7
-epochs = 1400
+epochs = 300
 back_propagation_batch_size = 64
 k_fold = 10
 k_max = 50
@@ -62,8 +62,15 @@ for record in dataset:
     y.append(record[2])
 del dataset
 
+y_sparse = []
+raw_dataset = dblp.load_ae_dataset(file_path='../Dataset/ae_dataset.pkl')
+for record in raw_dataset:
+    y_sparse.append(record[2])
+del raw_dataset
+
 x = np.asarray(x).reshape(x.__len__(), -1)
 y = np.asarray(y).reshape(y.__len__(), -1)
+y_sparse = np.asarray(y_sparse).reshape(y_sparse.__len__(), -1)
 
 # Train/Validation/Test version
 # x_train, x_validate, x_test, ids = crossValidate(x, train_ratio, validation_ratio)
@@ -121,7 +128,7 @@ for train_index, test_index in cv.split(x):
 
     autoencoder = Model(inputs=input_img, outputs=decoded)
 
-    autoencoder.compile(optimizer='adagrad', loss='mean_absolute_error')
+    autoencoder.compile(optimizer='adagrad', loss='mse')
 
     # Loading model weights
     load_weights_from_file_q = input('Load weights from file? (y/n)')
@@ -148,15 +155,14 @@ for train_index, test_index in cv.split(x):
     cvscores.append(score)
 
     # Team mode evaluation
-    '''
-    y_train_pred = [[int(candidate[0]) for candidate in t2v_model.get_team_most_similar_by_vector(record, k_max)]
-              for record in autoencoder.predict(x_train)]
-    y_train_pred = dblp.get_memebrID_by_teamID(y_train_pred)
+    # y_train_pred = [[int(candidate[0]) for candidate in t2v_model.get_team_most_similar_by_vector(record, k_max)]
+    #           for record in autoencoder.predict(x_train)]
+    # y_train_pred = dblp.get_memebrID_by_teamID(y_train_pred)
+    #
+    # y_test_pred = [[int(candidate[0]) for candidate in t2v_model.get_team_most_similar_by_vector(record, k_max)]
+    #           for record in autoencoder.predict(x_test)]
+    # y_test_pred = dblp.get_memebrID_by_teamID(y_test_pred)
 
-    y_test_pred = [[int(candidate[0]) for candidate in t2v_model.get_team_most_similar_by_vector(record, k_max)]
-              for record in autoencoder.predict(x_test)]
-    y_test_pred = dblp.get_memebrID_by_teamID(y_test_pred)
-    '''
 
     # Member mode evaluation
     y_train_pred = [[int(candidate[0]) for candidate in t2v_model.get_member_most_similar_by_vector(record, k_max)]
@@ -168,7 +174,7 @@ for train_index, test_index in cv.split(x):
     print("Evaluation on last batch of train data.")
     for k in evaluation_k_set:
         print("Evaluating r@k for top {} records in fold {}.".format(k, fold_counter))
-        r_at_k, r_at_k_array = dblp_eval.r_at_k_t2v(y_train_pred, y_train, k=k)
+        r_at_k, r_at_k_array = dblp_eval.r_at_k_t2v(y_train_pred, y_sparse[train_index], k=k)
         r_at_k_overall_train[k].append(r_at_k)
         r_at_k_all_train[k].append(r_at_k_array)
         print("For top {} in Train data: R@{}:{}".format(k, k, r_at_k))
@@ -178,7 +184,7 @@ for train_index, test_index in cv.split(x):
     for k in evaluation_k_set:
         # r@k evaluation
         print("Evaluating r@k for top {} records in fold {}.".format(k, fold_counter))
-        r_at_k, r_at_k_array = dblp_eval.r_at_k_t2v(y_test_pred, y_test, k=k)
+        r_at_k, r_at_k_array = dblp_eval.r_at_k_t2v(y_test_pred, y_sparse[test_index], k=k)
         r_at_k_overall[k].append(r_at_k)
         r_at_k_all[k].append(r_at_k_array)
         print("For top {} in Test data: R@{}:{}".format(k, k, r_at_k))
@@ -188,30 +194,30 @@ for train_index, test_index in cv.split(x):
     #     result = autoencoder.predict(test_instance)
 
     # saving model
-    # save_model_q = input('Save the models? (y/n)')
-    # if save_model_q.lower() == 'y':
-    model_json = autoencoder.to_json()
+    save_model_q = input('Save the models? (y/n)')
+    if save_model_q.lower() == 'y':
+        model_json = autoencoder.to_json()
 
-    # model_name = input('Please enter autoencoder model name:')
+        # model_name = input('Please enter autoencoder model name:')
 
-    with open('../Output/Models/{}_{}_Time{}_Fold{}.json'.format(dataset_name, method_name, time_str, fold_counter), "w") as json_file:
-        json_file.write(model_json)
+        with open('../Output/Models/{}_{}_Time{}_Fold{}.json'.format(dataset_name, method_name, time_str, fold_counter), "w") as json_file:
+            json_file.write(model_json)
 
-    autoencoder.save_weights(
-        "../Output/Models/Weights/{}_{}_Time{}_Fold{}.h5".format(dataset_name, method_name, time_str, fold_counter))
+        autoencoder.save_weights(
+            "../Output/Models/Weights/{}_{}_Time{}_Fold{}.h5".format(dataset_name, method_name, time_str, fold_counter))
 
-    with open(
-            '../Output/Models/{}_{}_Time{}_EncodingDim{}_Fold{}_Loss{}_Epoch{}_kFold{}_BatchBP{}.txt'
-                    .format(dataset_name, method_name, time_str, encoding_dim, fold_counter, int(score * 1000),
-                            epochs, k_fold, back_propagation_batch_size), 'w') as f:
-        with redirect_stdout(f):
-            autoencoder.summary()
+        with open(
+                '../Output/Models/{}_{}_Time{}_EncodingDim{}_Fold{}_Loss{}_Epoch{}_kFold{}_BatchBP{}.txt'
+                        .format(dataset_name, method_name, time_str, encoding_dim, fold_counter, int(score * 1000),
+                                epochs, k_fold, back_propagation_batch_size), 'w') as f:
+            with redirect_stdout(f):
+                autoencoder.summary()
 
-    # plot_model(autoencoder, '../Output/Models/{}_Time{}_EncodingDim{}_Fold{}_Loss{}_Epoch{}_kFold{}_BatchBP{}_BatchTraining{}.png'
-    #            .format(dataset_name, time_str, encoding_dim, fold_counter, int(np.mean(cvscores) * 1000), epoch, k_fold,
-    #                    back_propagation_batch_size, training_batch_size))
-    # print('Model and its summary and architecture plot are saved.')
-    print('Model and its summary are saved.')
+        # plot_model(autoencoder, '../Output/Models/{}_Time{}_EncodingDim{}_Fold{}_Loss{}_Epoch{}_kFold{}_BatchBP{}_BatchTraining{}.png'
+        #            .format(dataset_name, time_str, encoding_dim, fold_counter, int(np.mean(cvscores) * 1000), epoch, k_fold,
+        #                    back_propagation_batch_size, training_batch_size))
+        # print('Model and its summary and architecture plot are saved.')
+        print('Model and its summary are saved.')
 
     # Deleting model from RAM
     # K.clear_session()
@@ -233,3 +239,7 @@ print('Loss for each fold: {}'.format(cvscores))
 
 with open('../Backyard/T2V_dim{}_member_r_at_k_50.pkl'.format(embedding_dim), 'wb') as f:
     pkl.dump(r_at_k_overall, f)
+
+
+# with open('../Backyard/T2V_dim{}_team_r_at_k_50.pkl'.format(embedding_dim), 'wb') as f:
+#     pkl.dump(r_at_k_overall, f)
