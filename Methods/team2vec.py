@@ -88,8 +88,8 @@ class Team2Vec:
     def get_members(self):
         return self.model.wv.vocab
 
-    def get_team_members(self):
-        pass
+    def get_team_members(self, tid):
+        return [int(m) for t in self.teams if str(tid) in t.tags for m in t.words]
 
     def get_member_vec(self, mid):
         return self.model[str(mid)]
@@ -229,18 +229,21 @@ def main_train_team2vec():
 
 
 if __name__ == "__main__":
-    main_train_team2vec()
+    # main_train_team2vec()
 
     # t2v = Team2Vec()
     # t2v.load_model('./Output/Team2Vec/team_user/model_d500_w2_m1')
     # with open('./Dataset/ae_dataset.pkl', 'rb') as f:
     #     team_matrix = pickle.load(f)
+    # t2v.init(team_matrix)
     # for r in team_matrix:
     #     try:
     #         id = r[0]
     #         team_vec = t2v.get_team_vec(id)
     #         team_vec = t2v.get_teams()[str(id)]
+    #         print(t2v.get_team_members(id))
     #     except:
     #         print('{} not found!'.format(id))
+    pass
 
 
