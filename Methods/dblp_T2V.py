@@ -92,7 +92,7 @@ def sparse_reg(activ_matrix):
 
 time_str = time.strftime("%Y%m%d-%H%M%S")
 train_test_indices = dblp.load_Train_Test_indices()
-for fold_counter in range(k_fold+1):
+for fold_counter in range(1,k_fold+1):
     x_train = []
     y_train = []
     x_test = []
@@ -107,6 +107,10 @@ for fold_counter in range(k_fold+1):
         elif id in test_index:
             x_test.append(sample[1])
             y_test.append(sample[2])
+    x_train = np.asarray(x_train).reshape(len(x_train), -1)
+    y_train = np.asarray(y_train).reshape(len(y_train), -1)
+    x_test = np.asarray(x_test).reshape(len(x_test), -1)
+    y_test = np.asarray(y_test).reshape(len(y_test), -1)
 
     y_sparse_train = []
     y_sparse_test = []

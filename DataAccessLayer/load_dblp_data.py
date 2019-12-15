@@ -283,7 +283,7 @@ def Tokenize(text):
 
 def dataset_preprocessing(dataset, min_records=10, kfolds=10, max_features=2000, n_gram=3,
                           dataset_source_dir='../Dataset/dblp.pkl', shuffle_at_the_end=False,
-                          save_to_pkl=False, indices_dict_file_path='../Dataset/Train_Test_indices.pkl',
+                          save_to_pkl=True, indices_dict_file_path='../Dataset/Train_Test_indices.pkl',
                           preprocessed_dataset_file_path='../Dataset/dblp_preprocessed_dataset.pkl'):
     author_paper_counter = Counter()
     author_docID_dict = {}
