@@ -44,33 +44,18 @@ if dblp.ae_data_exist(file_path='../Dataset/ae_t2v_dim{}_dataset.pkl'.format(emb
 else:
     if not dblp.ae_data_exist(file_path='../Dataset/ae_dataset.pkl'):
         dblp.extract_data(filter_journals=True, skill_size_filter=min_skill_size, member_size_filter=min_member_size)
+    if not dblp.preprocessed_dataset_exist() or dblp.Train_Test_indices_exist():
+        dblp.dataset_preprocessing(dblp.load_ae_dataset(file_path='../Dataset/ae_dataset.pkl'))
+        dblp.extract_data(filter_journals=True, skill_size_filter=min_skill_size, member_size_filter=min_member_size)
         # extract_data(filter_journals=True, size_limit=data_size_limit)
     # t2v_model = Team2Vec()
     # t2v_model = load_T2V_model(t2v_model)
-    raw_dataset = dblp.load_ae_dataset(file_path='../Dataset/ae_dataset.pkl')
-    dblp.nn_t2v_dataset_generator(t2v_model, raw_dataset, '../Dataset/ae_t2v_dim{}_dataset.pkl'.format(embedding_dim))
-    del raw_dataset
+    preprocessed_dataset = dblp.load_preprocessed_dataset()
+    dblp.nn_t2v_dataset_generator(t2v_model, preprocessed_dataset, output_file_path='../Dataset/ae_t2v_dim{}_dataset.pkl'.format(embedding_dim))
+    del preprocessed_dataset
     # del t2v_model
     dataset = dblp.load_ae_dataset(file_path='../Dataset/ae_t2v_dim{}_dataset.pkl'.format(embedding_dim))
 
-ids = []
-x = []
-y = []
-for record in dataset:
-    ids.append(record[0])
-    x.append(record[1])
-    y.append(record[2])
-del dataset
-
-y_sparse = []
-raw_dataset = dblp.load_ae_dataset(file_path='../Dataset/ae_dataset.pkl')
-for record in raw_dataset:
-    y_sparse.append(record[2])
-del raw_dataset
-
-x = np.asarray(x).reshape(x.__len__(), -1)
-y = np.asarray(y).reshape(y.__len__(), -1)
-y_sparse = np.asarray(y_sparse).reshape(y_sparse.__len__(), -1)
 
 # Train/Validation/Test version
 # x_train, x_validate, x_test, ids = crossValidate(x, train_ratio, validation_ratio)
@@ -79,7 +64,6 @@ y_sparse = np.asarray(y_sparse).reshape(y_sparse.__len__(), -1)
 # y_test = y[ids[int(y.__len__() * (train_ratio + validation_ratio)):]]
 
 # 10-fold Cross Validation
-cv = KFold(n_splits=k_fold, random_state=seed, shuffle=True)
 cvscores = []
 
 # Defining evaluation scores holders for train data
@@ -94,8 +78,6 @@ r_at_k_overall = dblp_eval.init_eval_holder(
     evaluation_k_set)  # overall r@k of instances in one fold and one k_evaluation_set
 
 lambda_val = 0.001  # Weight decay , refer : https://stackoverflow.com/questions/44495698/keras-difference-between-kernel-and-activity-regularizers
-
-
 # Custom Regularizer function
 def sparse_reg(activ_matrix):
     p = 0.01
@@ -108,11 +90,39 @@ def sparse_reg(activ_matrix):
     return beta * K.sum(KLD)  # sum over the layer units
 
 
-fold_counter = 1
 time_str = time.strftime("%Y%m%d-%H%M%S")
-for train_index, test_index in cv.split(x):
+train_test_indices = dblp.load_Train_Test_indices()
+for fold_counter in range(k_fold+1):
+    x_train = []
+    y_train = []
+    x_test = []
+    y_test = []
+    train_index = train_test_indices[fold_counter]['Train']
+    test_index = train_test_indices[fold_counter]['Test']
+    for sample in dataset:
+        id = sample[0]
+        if id in train_index:
+            x_train.append(sample[1])
+            y_train.append(sample[2])
+        elif id in test_index:
+            x_test.append(sample[1])
+            y_test.append(sample[2])
+
+    y_sparse_train = []
+    y_sparse_test = []
+    preprocessed_dataset = dblp.load_preprocessed_dataset()
+    for sample in preprocessed_dataset:
+        id = sample[0]
+        if id in train_index:
+            y_sparse_train.append(sample[2])
+        elif id in test_index:
+            y_sparse_test.append(sample[2])
+    y_sparse_train = np.asarray(y_sparse_train).reshape(y_sparse_train.__len__(), -1)
+    y_sparse_test = np.asarray(y_sparse_test).reshape(y_sparse_test.__len__(), -1)
+    del preprocessed_dataset
+
     print('Fold number {}'.format(fold_counter))
-    x_train, x_test, y_train, y_test = x[train_index], x[test_index], y[train_index], y[test_index]
+    print('Dataset Size: {}'.format(len(dataset)))
     print('Train Size: {} Test Size: {}'.format(x_train.__len__(), x_test.__len__()))
 
     input_dim = x_train[0].shape[0]
@@ -155,26 +165,26 @@ for train_index, test_index in cv.split(x):
     cvscores.append(score)
 
     # Team mode evaluation
-    # y_train_pred = [[int(candidate[0]) for candidate in t2v_model.get_team_most_similar_by_vector(record, k_max)]
-    #           for record in autoencoder.predict(x_train)]
-    # y_train_pred = dblp.get_memebrID_by_teamID(y_train_pred)
-    #
-    # y_test_pred = [[int(candidate[0]) for candidate in t2v_model.get_team_most_similar_by_vector(record, k_max)]
-    #           for record in autoencoder.predict(x_test)]
-    # y_test_pred = dblp.get_memebrID_by_teamID(y_test_pred)
+    y_train_pred = [[int(candidate[0]) for candidate in t2v_model.get_team_most_similar_by_vector(record, k_max)]
+              for record in autoencoder.predict(x_train)]
+    y_train_pred = dblp.get_memebrID_by_teamID(y_train_pred)
+
+    y_test_pred = [[int(candidate[0]) for candidate in t2v_model.get_team_most_similar_by_vector(record, k_max)]
+              for record in autoencoder.predict(x_test)]
+    y_test_pred = dblp.get_memebrID_by_teamID(y_test_pred)
 
 
     # Member mode evaluation
-    y_train_pred = [[int(candidate[0]) for candidate in t2v_model.get_member_most_similar_by_vector(record, k_max)]
-              for record in autoencoder.predict(x_train)]
-    y_test_pred = [[int(candidate[0]) for candidate in t2v_model.get_member_most_similar_by_vector(record, k_max)]
-              for record in autoencoder.predict(x_test)]
+    # y_train_pred = [[int(candidate[0]) for candidate in t2v_model.get_member_most_similar_by_vector(record, k_max)]
+    #           for record in autoencoder.predict(x_train)]
+    # y_test_pred = [[int(candidate[0]) for candidate in t2v_model.get_member_most_similar_by_vector(record, k_max)]
+    #           for record in autoencoder.predict(x_test)]
 
     # @k evaluation process for last train batch data
     print("Evaluation on last batch of train data.")
     for k in evaluation_k_set:
         print("Evaluating r@k for top {} records in fold {}.".format(k, fold_counter))
-        r_at_k, r_at_k_array = dblp_eval.r_at_k_t2v(y_train_pred, y_sparse[train_index], k=k)
+        r_at_k, r_at_k_array = dblp_eval.r_at_k_t2v(y_train_pred, y_sparse_train, k=k)
         r_at_k_overall_train[k].append(r_at_k)
         r_at_k_all_train[k].append(r_at_k_array)
         print("For top {} in Train data: R@{}:{}".format(k, k, r_at_k))
@@ -184,7 +194,7 @@ for train_index, test_index in cv.split(x):
     for k in evaluation_k_set:
         # r@k evaluation
         print("Evaluating r@k for top {} records in fold {}.".format(k, fold_counter))
-        r_at_k, r_at_k_array = dblp_eval.r_at_k_t2v(y_test_pred, y_sparse[test_index], k=k)
+        r_at_k, r_at_k_array = dblp_eval.r_at_k_t2v(y_test_pred, y_sparse_test, k=k)
         r_at_k_overall[k].append(r_at_k)
         r_at_k_all[k].append(r_at_k_array)
         print("For top {} in Test data: R@{}:{}".format(k, k, r_at_k))
@@ -237,9 +247,9 @@ for train_index, test_index in cv.split(x):
 print('Loss for each fold: {}'.format(cvscores))
 
 
-with open('../Backyard/T2V_dim{}_member_r_at_k_50.pkl'.format(embedding_dim), 'wb') as f:
-    pkl.dump(r_at_k_overall, f)
-
-
-# with open('../Backyard/T2V_dim{}_team_r_at_k_50.pkl'.format(embedding_dim), 'wb') as f:
+# with open('../Backyard/T2V_dim{}_member_r_at_k_50.pkl'.format(embedding_dim), 'wb') as f:
 #     pkl.dump(r_at_k_overall, f)
+
+
+with open('../Backyard/T2V_dim{}_team_r_at_k_50.pkl'.format(embedding_dim), 'wb') as f:
+    pkl.dump(r_at_k_overall, f)

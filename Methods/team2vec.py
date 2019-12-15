@@ -35,7 +35,7 @@ class Team2Vec:
             self.teams.append(td)
         print('#teams loaded: {}; member type = {}'.format(len(self.teams), member_type))
 
-    def train(self, dimension=300, window=2, dist_mode=1, epochs=100, output='./'):
+    def train(self, dimension=300, window=2, dist_mode=1, epochs=100, output='./Dataset/'):
 
         self.settings = 'd' + str(dimension) + '_w' + str(window) + '_m' + str(dist_mode)
         print('training settings: %s\n'%self.settings)
@@ -75,7 +75,7 @@ class Team2Vec:
             self.model.min_alpha = self.model.alpha  # fix the learning rate, no decay
 
         if output:
-            with open('{}teams_{}'.format(output, self.settings)) as f:
+            with open('{}teams_{}'.format(output, self.settings), 'wb') as f:
                 pickle.dump(self.teams, f)
             self.model.save('{}model_{}'.format(output, self.settings))
             self.model.save_word2vec_format('{}members2vec_{}'.format(output, self.settings))
@@ -110,7 +110,7 @@ class Team2Vec:
         #ModuleNotFoundError: No module named 'numpy.random._pickle': numpy version conflict when saving and loading
         self.model = gensim.models.Doc2Vec.load(modelfile)
         if includeTeams:
-            with open(modelfile.replace('model', 'teams')) as f:
+            with open(modelfile.replace('model', 'teams'), 'rb') as f:
                 self.teams = pickle.load(f)
 
     def get_member_most_similar_by_vector(self, mvec, topn=10):

@@ -3,6 +3,13 @@ from os import path
 from Methods.team2vec import *
 from scipy import sparse
 import pandas
+from collections import Counter
+import numpy as np
+import random
+import pickle as pkl
+from nltk.tokenize import word_tokenize, RegexpTokenizer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from nltk.stem.porter import PorterStemmer
 
 publication_filter = ['sigmod', 'vldb', 'icde', 'icdt', 'edbt', 'pods', 'kdd', 'www',
                       'sdm', 'pkdd', 'icdm', 'cikm', 'aaai', 'icml', 'ecml', 'colt',
@@ -230,7 +237,7 @@ def batch_generator(iterable, n=10):
         yield np.asarray([record.todense() for record in iterable[ndx:min(ndx + n, l)]]).reshape(batch_length, -1)
 
 
-def nn_t2v_dataset_generator(model: Team2Vec, dataset, file_path):
+def nn_t2v_dataset_generator(model: Team2Vec, dataset, output_file_path):
     t2v_dataset = []
     counter = 1
     for record in dataset:
@@ -243,12 +250,12 @@ def nn_t2v_dataset_generator(model: Team2Vec, dataset, file_path):
             counter += 1
         except:
             print('Cannot add record with id {}'.format(id))
-    with open(file_path, 'wb') as f:
+    with open(output_file_path, 'wb') as f:
         pickle.dump(t2v_dataset, f)
 
 
 def get_memebrID_by_teamID(preds_ids):
-    dataset = load_ae_dataset(file_path='../Dataset/ae_dataset.pkl')
+    dataset = load_preprocessed_dataset()
     dataset = pandas.DataFrame(dataset, columns=['id', 'skill', 'author'])
     preds_authors_ids = []
     for pred_ids in preds_ids:
@@ -263,3 +270,156 @@ def get_memebrID_by_teamID(preds_ids):
                 print('Cannot find team for sample with id: {}'.format(id))
         preds_authors_ids.append(authors_ids)
     return preds_authors_ids
+
+
+def Tokenize(text):
+    tokenizer = RegexpTokenizer(r'\w+')
+    tokens = tokenizer.tokenize(text)
+    tokens = [word for word in tokens if word.isalpha()]
+    stemmer = PorterStemmer()
+    tokens = [stemmer.stem(word) for word in tokens]
+    return tokens
+
+
+def dataset_preprocessing(dataset, min_records=10, kfolds=10, max_features=2000, n_gram=3,
+                          dataset_source_dir='../Dataset/dblp.pkl', shuffle_at_the_end=False,
+                          save_to_pkl=False, indices_dict_file_path='../Dataset/Train_Test_indices.pkl',
+                          preprocessed_dataset_file_path='../Dataset/dblp_preprocessed_dataset.pkl'):
+    author_paper_counter = Counter()
+    author_docID_dict = {}
+    docID_author_dict = {}
+
+    for sample in dataset:
+        id = sample[0]
+        sparse_authorIDs = sparse.coo_matrix(sample[2])
+        author_ids = sparse_authorIDs.nonzero()[1]
+        for author_id in author_ids:
+            if author_id not in author_docID_dict.keys():
+                author_docID_dict[author_id] = []
+            author_docID_dict[author_id].append(id)
+        author_paper_counter.update(author_ids)
+
+    eligible_authors = [x for x in author_paper_counter.keys() if author_paper_counter.get(x) >= min_records]
+
+    eligible_documents = []
+    for eligible_author in eligible_authors:
+        eligible_documents.extend(author_docID_dict[eligible_author])
+    eligible_documents = np.unique(eligible_documents).tolist()
+
+    data = load_citation_pkl(dataset_source_dir)
+    data = np.asarray(data)
+    eligible_titles = []
+    for eligible_paper in data[eligible_documents]:
+        eligible_titles.append(eligible_paper['title'].strip())
+    vect = TfidfVectorizer(tokenizer=Tokenize, analyzer='word', lowercase=True, stop_words='english',
+                           ngram_range=(1, n_gram), max_features=max_features)
+    vect.fit(eligible_titles)
+
+    for sample in dataset:
+        id = sample[0]
+        if id in eligible_documents:
+            sparse_authorIDs = sparse.coo_matrix(sample[2])
+            author_ids = sparse_authorIDs.nonzero()[1]
+            docID_author_dict[id] = author_ids
+
+    author_set = []
+    skill_sets = []
+    id_sets = []
+    for eligible_document_id in eligible_documents:
+        skill_set = vect.transform([data[eligible_document_id]['title'].strip()])
+        if skill_set.count_nonzero() > 0:
+            author_set.extend(docID_author_dict[eligible_document_id])
+            id_sets.append(eligible_document_id)
+            skill_sets.append(skill_set)
+        else:
+            eligible_documents.remove(eligible_document_id)
+            del docID_author_dict[eligible_document_id]
+    author_set = np.unique(author_set).tolist()
+
+    print('Number of eligible documents equal/more than {} records: {}'.format(min_records, len(eligible_documents)))
+    print('Number of eligible authors equal/more than {} records: {}'.format(min_records, len(eligible_authors)))
+
+    preprocessed_dataset = []
+    for id, skill_vector in zip(id_sets, skill_sets):
+        author_vector = []
+        for author_id in docID_author_dict[id]:
+            author_vector.extend([author_set.index(author_id)])
+        author_vector = sparse.coo_matrix(author_vector)
+        preprocessed_dataset.append([id, skill_vector, author_vector])
+
+    train_docs = []
+    test_docs = []
+    rule_violence_counter = 0
+    for author in author_docID_dict.keys():
+        list_of_author_docs = author_docID_dict.get(author)
+        list_of_author_docs = [docID for docID in list_of_author_docs if docID in eligible_documents]
+
+        number_of_test_docs = np.ceil((1 / kfolds) * len(list_of_author_docs))
+
+        already_in_test = []
+        for doc in list_of_author_docs:
+            if doc in test_docs:
+                already_in_test.append(doc)
+
+        number_of_moving_to_test = int(number_of_test_docs - len(already_in_test))
+
+        if number_of_moving_to_test <= 0:
+            rule_violence_counter += 1
+
+        elif number_of_moving_to_test > 0:
+            eligible_samples_for_test_set = [doc for doc in list_of_author_docs if
+                                             doc not in already_in_test and doc not in train_docs]
+            if len(eligible_samples_for_test_set) > 0:
+                if len(eligible_samples_for_test_set) > number_of_moving_to_test:
+                    test_docs.extend(random.sample(eligible_samples_for_test_set, k=number_of_moving_to_test))
+                else:
+                    test_docs.extend(eligible_samples_for_test_set)
+
+        train_docs.extend([ele for ele in list_of_author_docs if
+                           ele not in test_docs and ele not in train_docs])
+
+
+    print("Number of Train docs: {}".format(len(train_docs)))
+    print("Number of Test docs: {}".format(len(test_docs)))
+    print("Number of violations in train/test split because of already"
+          " existence of a paper from target author in test set: {}".format(rule_violence_counter))
+
+    if shuffle_at_the_end:
+        train_docs = random.shuffle(train_docs)
+        test_docs = random.shuffle(test_docs)
+
+    indices = {1: {'Train': train_docs, 'Test': test_docs}}
+
+    if save_to_pkl:
+        with open('{}'.format(indices_dict_file_path), 'wb') as f:
+            pkl.dump(indices, f)
+        with open('{}'.format(preprocessed_dataset_file_path), 'wb') as f:
+            pkl.dump(preprocessed_dataset, f)
+
+    return indices, preprocessed_dataset
+
+
+def Train_Test_indices_exist(file_path='../Dataset/Train_Test_indices.pkl'):
+    if path.exists(file_path):
+        return True
+    else:
+        return False
+
+
+def load_Train_Test_indices(file_path='../Dataset/Train_Test_indices.pkl'):
+    with open(file_path, 'rb') as f:
+        indices = pickle.load(f)
+    return indices
+
+
+def preprocessed_dataset_exist(file_path='../Dataset/dblp_preprocessed_dataset.pkl'):
+    if path.exists(file_path):
+        return True
+    else:
+        return False
+
+
+def load_preprocessed_dataset(file_path='../Dataset/dblp_preprocessed_dataset.pkl'):
+    with open(file_path, 'rb') as f:
+        dataset = pickle.load(f)
+    return dataset
