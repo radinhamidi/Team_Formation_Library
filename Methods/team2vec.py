@@ -35,7 +35,7 @@ class Team2Vec:
             self.teams.append(td)
         print('#teams loaded: {}; member type = {}'.format(len(self.teams), member_type))
 
-    def train(self, dimension=300, window=2, dist_mode=1, epochs=100, output='./Dataset/'):
+    def train(self, dimension=300, window=2, dist_mode=1, epochs=100, output='./Output/Models/T2V'):
 
         self.settings = 'd' + str(dimension) + '_w' + str(window) + '_m' + str(dist_mode)
         print('training settings: %s\n'%self.settings)

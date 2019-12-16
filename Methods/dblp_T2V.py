@@ -46,22 +46,12 @@ else:
         dblp.extract_data(filter_journals=True, skill_size_filter=min_skill_size, member_size_filter=min_member_size)
     if not dblp.preprocessed_dataset_exist() or dblp.Train_Test_indices_exist():
         dblp.dataset_preprocessing(dblp.load_ae_dataset(file_path='../Dataset/ae_dataset.pkl'))
-        dblp.extract_data(filter_journals=True, skill_size_filter=min_skill_size, member_size_filter=min_member_size)
-        # extract_data(filter_journals=True, size_limit=data_size_limit)
-    # t2v_model = Team2Vec()
-    # t2v_model = load_T2V_model(t2v_model)
     preprocessed_dataset = dblp.load_preprocessed_dataset()
     dblp.nn_t2v_dataset_generator(t2v_model, preprocessed_dataset, output_file_path='../Dataset/ae_t2v_dim{}_dataset.pkl'.format(embedding_dim))
     del preprocessed_dataset
-    # del t2v_model
     dataset = dblp.load_ae_dataset(file_path='../Dataset/ae_t2v_dim{}_dataset.pkl'.format(embedding_dim))
 
 
-# Train/Validation/Test version
-# x_train, x_validate, x_test, ids = crossValidate(x, train_ratio, validation_ratio)
-# y_train = y[ids[0:int(y.__len__() * train_ratio)]]
-# y_validate = y[ids[int(y.__len__() * train_ratio):int(y.__len__() * (train_ratio + validation_ratio))]]
-# y_test = y[ids[int(y.__len__() * (train_ratio + validation_ratio)):]]
 
 # 10-fold Cross Validation
 cvscores = []
@@ -111,6 +101,7 @@ for fold_counter in range(1,k_fold+1):
     y_train = np.asarray(y_train).reshape(len(y_train), -1)
     x_test = np.asarray(x_test).reshape(len(x_test), -1)
     y_test = np.asarray(y_test).reshape(len(y_test), -1)
+
 
     y_sparse_train = []
     y_sparse_test = []
@@ -169,20 +160,20 @@ for fold_counter in range(1,k_fold+1):
     cvscores.append(score)
 
     # Team mode evaluation
-    y_train_pred = [[int(candidate[0]) for candidate in t2v_model.get_team_most_similar_by_vector(record, k_max)]
-              for record in autoencoder.predict(x_train)]
-    y_train_pred = dblp.get_memebrID_by_teamID(y_train_pred)
+    # y_train_pred = [[int(candidate[0]) for candidate in t2v_model.get_team_most_similar_by_vector(record, k_max)]
+    #           for record in autoencoder.predict(x_train)]
+    # y_train_pred = dblp.get_memebrID_by_teamID(y_train_pred)
 
-    y_test_pred = [[int(candidate[0]) for candidate in t2v_model.get_team_most_similar_by_vector(record, k_max)]
-              for record in autoencoder.predict(x_test)]
-    y_test_pred = dblp.get_memebrID_by_teamID(y_test_pred)
+    # y_test_pred = [[int(candidate[0]) for candidate in t2v_model.get_team_most_similar_by_vector(record, k_max)]
+    #           for record in autoencoder.predict(x_test)]
+    # y_test_pred = dblp.get_memebrID_by_teamID(y_test_pred)
 
 
     # Member mode evaluation
-    # y_train_pred = [[int(candidate[0]) for candidate in t2v_model.get_member_most_similar_by_vector(record, k_max)]
-    #           for record in autoencoder.predict(x_train)]
-    # y_test_pred = [[int(candidate[0]) for candidate in t2v_model.get_member_most_similar_by_vector(record, k_max)]
-    #           for record in autoencoder.predict(x_test)]
+    y_train_pred = [[int(candidate[0]) for candidate in t2v_model.get_member_most_similar_by_vector(record, k_max)]
+              for record in autoencoder.predict(x_train)]
+    y_test_pred = [[int(candidate[0]) for candidate in t2v_model.get_member_most_similar_by_vector(record, k_max)]
+              for record in autoencoder.predict(x_test)]
 
     # @k evaluation process for last train batch data
     print("Evaluation on last batch of train data.")
@@ -251,9 +242,9 @@ for fold_counter in range(1,k_fold+1):
 print('Loss for each fold: {}'.format(cvscores))
 
 
-# with open('../Backyard/T2V_dim{}_member_r_at_k_50.pkl'.format(embedding_dim), 'wb') as f:
-#     pkl.dump(r_at_k_overall, f)
-
-
-with open('../Backyard/T2V_dim{}_team_r_at_k_50.pkl'.format(embedding_dim), 'wb') as f:
+with open('../Backyard/T2V_dim{}_member_r_at_k_50.pkl'.format(embedding_dim), 'wb') as f:
     pkl.dump(r_at_k_overall, f)
+
+
+# with open('../Backyard/T2V_dim{}_team_r_at_k_50.pkl'.format(embedding_dim), 'wb') as f:
+#     pkl.dump(r_at_k_overall, f)
