@@ -2,7 +2,7 @@ import os
 
 
 def main():
-    os.system('python ./Methods/dblp_KL.py')
+    os.system('python ./ml/nn_simple.py')
 
 
 if __name__ == '__main__':

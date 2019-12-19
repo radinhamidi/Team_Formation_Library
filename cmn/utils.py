@@ -1,3 +1,5 @@
+import json
+
 import numpy as np
 import pandas as pd
 import pickle
@@ -8,7 +10,7 @@ from sklearn import preprocessing
 import itertools
 import keras
 import glob
-from Methods.team2vec import *
+from ml.team2vec import *
 
 
 def crossValidate(data: np.ndarray, split1, split2):
@@ -107,7 +109,7 @@ def plot_confusion_matrix(cm, class_names,
     plt.xlabel('Predicted label')
 
 
-def pick_model_weights(model: keras.models.Model, dataset_name, path='../Output/Models/Weights'):
+def pick_model_weights(model: keras.models.Model, dataset_name, path='../output/Models/Weights'):
     model_names = []
     for path in glob.glob('{}/{}_*.h5'.format(path, dataset_name)):
         model_names.append(path)
@@ -119,7 +121,7 @@ def pick_model_weights(model: keras.models.Model, dataset_name, path='../Output/
     return model
 
 
-def load_T2V_model(model: Team2Vec, path='../Output/Models/T2V'):
+def load_T2V_model(model: Team2Vec, path='../output/Models/T2V'):
     model_names = []
     for path in glob.glob('{}/model_*'.format(path)):
         model_names.append(path)
@@ -129,3 +131,7 @@ def load_T2V_model(model: Team2Vec, path='../Output/Models/T2V'):
     model_number = int(input('?')) - 1
     model.load_model(model_names[model_number])
     return model
+
+
+def save_record(dict, dict_name, dir='../output/'):
+    json.dump(str(dict), open(dir + dict_name + '.json', 'w'))

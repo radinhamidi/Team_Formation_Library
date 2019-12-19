@@ -1,15 +1,14 @@
-from Common.Utils import *
 from os import path
-from Methods.team2vec import *
 from scipy import sparse
 import pandas
 from collections import Counter
 import numpy as np
-import random
 import pickle as pkl
-from nltk.tokenize import word_tokenize, RegexpTokenizer
 from sklearn.feature_extraction.text import TfidfVectorizer
+from nltk.tokenize import word_tokenize, RegexpTokenizer
 from nltk.stem.porter import PorterStemmer
+
+from ml.team2vec import *
 
 publication_filter = ['sigmod', 'vldb', 'icde', 'icdt', 'edbt', 'pods', 'kdd', 'www',
                       'sdm', 'pkdd', 'icdm', 'cikm', 'aaai', 'icml', 'ecml', 'colt',
@@ -144,14 +143,14 @@ def load_authors(dir):
     return authors.values, nameIDs.values
 
 
-def convert_to_pkl(txt_dir='../Dataset/dblp.txt', pkl_dir='../Dataset/dblp.pkl', ftype='dict'):
+def convert_to_pkl(txt_dir='../dataset/dblp.txt', pkl_dir='../dataset/dblp.pkl', ftype='dict'):
     load_dblp_arnet(txt_dir, pkl_dir, ftype=ftype)
 
 
 # dblp to sparse matrix: output: pickle file of the sparse matrix
 def extract_data(filter_journals=False, size_limit=np.inf, skill_size_filter=0, member_size_filter=0,
-                 source_dir='../Dataset/dblp.pkl', skill_dir='../Dataset/invertedTermCount.txt',
-                 author_dir='../Dataset/authorNameId.txt', output_dir='../Dataset/ae_dataset.pkl'):
+                 source_dir='../dataset/dblp.pkl', skill_dir='../dataset/invertedTermCount.txt',
+                 author_dir='../dataset/authorNameId.txt', output_dir='../dataset/ae_dataset.pkl'):
     if not source_pkl_exist(file_path=source_dir):
         convert_to_pkl()
 
@@ -198,14 +197,14 @@ def extract_data(filter_journals=False, size_limit=np.inf, skill_size_filter=0, 
         print('{} records saved to {} successfully.'.format(counter + 1, output_dir))
 
 
-def load_ae_dataset(file_path='../Dataset/ae_dataset.pkl'):
+def load_ae_dataset(file_path='../dataset/ae_dataset.pkl'):
     with open(file_path, 'rb') as f:
         dataset = pickle.load(f)
     return dataset
 
 
 # we should check if we have the proper dataset for ae or not. and if not then we run extract_data function
-def ae_data_exist(file_path='../Dataset/ae_dataset.pkl'):
+def ae_data_exist(file_path='../dataset/ae_dataset.pkl'):
     if path.exists(file_path):
         return True
     else:
@@ -213,7 +212,7 @@ def ae_data_exist(file_path='../Dataset/ae_dataset.pkl'):
 
 
 # we should check if we have the source dataset or not. and if not then we run convert_to_pkl() function
-def source_pkl_exist(file_path='../Dataset/dblp.pkl'):
+def source_pkl_exist(file_path='../dataset/dblp.pkl'):
     if path.exists(file_path):
         return True
     else:
@@ -228,14 +227,6 @@ def filter_pubs(venue: str):
             found = True
             break
     return found
-
-
-def batch_generator(iterable, n=10):
-    l = len(iterable)
-    for ndx in range(0, l, n):
-        batch_length = min(ndx + n, l) - ndx
-        yield np.asarray([record[0].todense() for record in iterable[ndx:min(ndx + n, l)]]).reshape(batch_length, -1)
-
 
 def nn_t2v_dataset_generator(model: Team2Vec, dataset, output_file_path):
     t2v_dataset = []
@@ -272,7 +263,7 @@ def get_memebrID_by_teamID(preds_ids):
     return preds_authors_ids
 
 
-def Tokenize(text):
+def tokenize(text):
     tokenizer = RegexpTokenizer(r'\w+')
     tokens = tokenizer.tokenize(text)
     tokens = [word for word in tokens if word.isalpha()]
@@ -280,11 +271,10 @@ def Tokenize(text):
     tokens = [stemmer.stem(word) for word in tokens]
     return tokens
 
-
 def dataset_preprocessing(dataset, min_records=10, kfolds=10, max_features=2000, n_gram=3,
-                          dataset_source_dir='../Dataset/dblp.pkl', shuffle_at_the_end=False,
-                          save_to_pkl=True, indices_dict_file_path='../Dataset/Train_Test_indices.pkl',
-                          preprocessed_dataset_file_path='../Dataset/dblp_preprocessed_dataset.pkl', seed=7):
+                          dataset_source_dir='../dataset/dblp.pkl', shuffle_at_the_end=False,
+                          save_to_pkl=True, indices_dict_file_path='../dataset/Train_Test_indices.pkl',
+                          preprocessed_dataset_file_path='../dataset/dblp_preprocessed_dataset.pkl', seed=7):
     random.seed(seed)
     author_paper_counter = Counter()
     author_docID_dict = {}
@@ -312,7 +302,7 @@ def dataset_preprocessing(dataset, min_records=10, kfolds=10, max_features=2000,
     eligible_titles = []
     for eligible_paper in data[eligible_documents]:
         eligible_titles.append(eligible_paper['title'].strip())
-    vect = TfidfVectorizer(tokenizer=Tokenize, analyzer='word', lowercase=True, stop_words='english',
+    vect = TfidfVectorizer(tokenizer=tokenize, analyzer='word', lowercase=True, stop_words='english',
                            ngram_range=(1, n_gram), max_features=max_features)
     vect.fit(eligible_titles)
 
@@ -402,27 +392,53 @@ def dataset_preprocessing(dataset, min_records=10, kfolds=10, max_features=2000,
     return indices, preprocessed_dataset
 
 
-def Train_Test_indices_exist(file_path='../Dataset/Train_Test_indices.pkl'):
+def Train_Test_indices_exist(file_path='../dataset/Train_Test_indices.pkl'):
     if path.exists(file_path):
         return True
     else:
         return False
 
 
-def load_Train_Test_indices(file_path='../Dataset/Train_Test_indices.pkl'):
+def load_train_test_indices(file_path='../dataset/Train_Test_indices.pkl'):
     with open(file_path, 'rb') as f:
         indices = pickle.load(f)
     return indices
 
 
-def preprocessed_dataset_exist(file_path='../Dataset/dblp_preprocessed_dataset.pkl'):
+def preprocessed_dataset_exist(file_path='../dataset/dblp_preprocessed_dataset.pkl'):
     if path.exists(file_path):
         return True
     else:
         return False
 
 
-def load_preprocessed_dataset(file_path='../Dataset/dblp_preprocessed_dataset.pkl'):
+def load_preprocessed_dataset(file_path='../dataset/dblp_preprocessed_dataset.pkl'):
     with open(file_path, 'rb') as f:
         dataset = pickle.load(f)
     return dataset
+
+
+def get_fold_data(fold_counter, dataset, train_test_indices):
+    x_train = []
+    y_train = []
+    x_test = []
+    y_test = []
+    train_index = train_test_indices[fold_counter]['Train']
+    test_index = train_test_indices[fold_counter]['Test']
+    for sample in dataset:
+        id = sample[0]
+        if id in train_index:
+            x_train.append(sample[1])
+            y_train.append(sample[2])
+        elif id in test_index:
+            x_test.append(sample[1])
+            y_test.append(sample[2])
+    x_train = np.asarray(x_train).reshape(len(x_train), -1)
+    y_train = np.asarray(y_train).reshape(len(y_train), -1)
+    x_test = np.asarray(x_test).reshape(len(x_test), -1)
+    y_test = np.asarray(y_test).reshape(len(y_test), -1)
+
+    print('Fold number {}'.format(fold_counter))
+    print('dataset Size: {}'.format(len(dataset)))
+    print('Train Size: {} Test Size: {}'.format(x_train.__len__(), x_test.__len__()))
+    return x_train, y_train, x_test, y_test

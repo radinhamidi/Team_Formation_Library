@@ -1,4 +1,4 @@
-from DataAccessLayer.load_dblp_data import *
+from dal.load_dblp_data import *
 from keras.layers import Input, Dense
 from keras.models import Model
 from keras import backend as K

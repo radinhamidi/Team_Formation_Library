@@ -9,7 +9,7 @@ import gensim, numpy, pylab, random, pickle
 import os, getopt, sys, multiprocessing
 sys.path.extend(['./../team_formation'])
 
-from Common.tsne import tsne, pca
+from cmn.tsne import tsne, pca
 # teams as documents, members as words
 # doc_list = ['u1 u2 u3','u2 u3','u1 u2 u1 u2']
 # label_list = ['t1','t2','t3']
@@ -35,7 +35,7 @@ class Team2Vec:
             self.teams.append(td)
         print('#teams loaded: {}; member type = {}'.format(len(self.teams), member_type))
 
-    def train(self, dimension=300, window=2, dist_mode=1, epochs=100, output='./Output/Models/T2V/'):
+    def train(self, dimension=300, window=2, dist_mode=1, epochs=100, output='./output/Models/T2V/'):
 
         self.settings = 'd' + str(dimension) + '_w' + str(window) + '_m' + str(dist_mode)
         print('training settings: %s\n'%self.settings)
@@ -181,8 +181,8 @@ class Team2Vec:
 
 
 def main_train_team2vec():
-    import DataAccessLayer.load_dblp_data as dblp
-    if dblp.ae_data_exist(file_path='../Dataset/ae_dataset.pkl'):
+    import dal.load_dblp_data as dblp
+    if dblp.ae_data_exist(file_path='../dataset/ae_dataset.pkl'):
         team_matrix = dblp.load_ae_dataset()
     else:
         dblp.extract_data(filter_journals=True)
@@ -214,26 +214,26 @@ def main_train_team2vec():
             window = int(arg)
 
     t2v.init(team_matrix, member_type=member_type)
-    t2v.train(dimension=dimension, window=window, dist_mode=dm, output='./Output/Team2Vec/', epochs=100)
-    t2v.plot_model('pca', output='./Output/Team2Vec/')
-    t2v.plot_model('tsne', output='./Output/Team2Vec/')
+    t2v.train(dimension=dimension, window=window, dist_mode=dm, output='./output/Team2Vec/', epochs=100)
+    t2v.plot_model('pca', output='./output/Team2Vec/')
+    t2v.plot_model('tsne', output='./output/Team2Vec/')
 
     # sample running string
-    # python3 -u ./Methods/team2vec.py -d 500 -w 2 -m 2>&1 |& tee  ./Output/Team2Vec/log_d500_w2_m1.txt
+    # python3 -u ./ml/team2vec.py -d 500 -w 2 -m 2>&1 |& tee  ./output/Team2Vec/log_d500_w2_m1.txt
 
     # test
     # t2v.init(random.sample(team_matrix, 100))
-    # t2v.train(dimension=100, window=2, dist_mode=1, output='./Output/Team2Vec/', epochs=10)
-    # t2v.plot_model('pca', output='./Output/Team2Vec/')
-    # t2v.plot_model('tsne', output='./Output/Team2Vec/')
+    # t2v.train(dimension=100, window=2, dist_mode=1, output='./output/Team2Vec/', epochs=10)
+    # t2v.plot_model('pca', output='./output/Team2Vec/')
+    # t2v.plot_model('tsne', output='./output/Team2Vec/')
 
 
 if __name__ == "__main__":
     # main_train_team2vec()
 
     # t2v = Team2Vec()
-    # t2v.load_model('./Output/Team2Vec/team_user/model_d500_w2_m1')
-    # with open('./Dataset/ae_dataset.pkl', 'rb') as f:
+    # t2v.load_model('./output/Team2Vec/team_user/model_d500_w2_m1')
+    # with open('./dataset/ae_dataset.pkl', 'rb') as f:
     #     team_matrix = pickle.load(f)
     # t2v.init(team_matrix)
     # for r in team_matrix:
