@@ -28,7 +28,7 @@ train_ratio = 0.7
 validation_ratio = 0.15
 min_skill_size = 0
 min_member_size = 0
-encoding_dim = 500  # encoded size
+encoding_dim = 1000  # encoded size
 ########
 
 # fix random seed for reproducibility
@@ -44,8 +44,8 @@ if dblp.ae_data_exist(file_path='../Dataset/ae_t2v_dim{}_dataset.pkl'.format(emb
 else:
     if not dblp.ae_data_exist(file_path='../Dataset/ae_dataset.pkl'):
         dblp.extract_data(filter_journals=True, skill_size_filter=min_skill_size, member_size_filter=min_member_size)
-    if not dblp.preprocessed_dataset_exist() or dblp.Train_Test_indices_exist():
-        dblp.dataset_preprocessing(dblp.load_ae_dataset(file_path='../Dataset/ae_dataset.pkl'))
+    if not dblp.preprocessed_dataset_exist() or not dblp.Train_Test_indices_exist():
+        dblp.dataset_preprocessing(dblp.load_ae_dataset(file_path='../Dataset/ae_dataset.pkl'), seed=seed)
     preprocessed_dataset = dblp.load_preprocessed_dataset()
     dblp.nn_t2v_dataset_generator(t2v_model, preprocessed_dataset, output_file_path='../Dataset/ae_t2v_dim{}_dataset.pkl'.format(embedding_dim))
     del preprocessed_dataset
@@ -163,7 +163,7 @@ for fold_counter in range(1,k_fold+1):
     # y_train_pred = [[int(candidate[0]) for candidate in t2v_model.get_team_most_similar_by_vector(record, k_max)]
     #           for record in autoencoder.predict(x_train)]
     # y_train_pred = dblp.get_memebrID_by_teamID(y_train_pred)
-
+    #
     # y_test_pred = [[int(candidate[0]) for candidate in t2v_model.get_team_most_similar_by_vector(record, k_max)]
     #           for record in autoencoder.predict(x_test)]
     # y_test_pred = dblp.get_memebrID_by_teamID(y_test_pred)

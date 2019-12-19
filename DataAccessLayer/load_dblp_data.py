@@ -234,7 +234,7 @@ def batch_generator(iterable, n=10):
     l = len(iterable)
     for ndx in range(0, l, n):
         batch_length = min(ndx + n, l) - ndx
-        yield np.asarray([record.todense() for record in iterable[ndx:min(ndx + n, l)]]).reshape(batch_length, -1)
+        yield np.asarray([record[0].todense() for record in iterable[ndx:min(ndx + n, l)]]).reshape(batch_length, -1)
 
 
 def nn_t2v_dataset_generator(model: Team2Vec, dataset, output_file_path):
@@ -284,7 +284,8 @@ def Tokenize(text):
 def dataset_preprocessing(dataset, min_records=10, kfolds=10, max_features=2000, n_gram=3,
                           dataset_source_dir='../Dataset/dblp.pkl', shuffle_at_the_end=False,
                           save_to_pkl=True, indices_dict_file_path='../Dataset/Train_Test_indices.pkl',
-                          preprocessed_dataset_file_path='../Dataset/dblp_preprocessed_dataset.pkl'):
+                          preprocessed_dataset_file_path='../Dataset/dblp_preprocessed_dataset.pkl', seed=7):
+    random.seed(seed)
     author_paper_counter = Counter()
     author_docID_dict = {}
     docID_author_dict = {}
@@ -327,6 +328,7 @@ def dataset_preprocessing(dataset, min_records=10, kfolds=10, max_features=2000,
     id_sets = []
     for eligible_document_id in eligible_documents:
         skill_set = vect.transform([data[eligible_document_id]['title'].strip()])
+        skill_set.tocoo()
         if skill_set.count_nonzero() > 0:
             author_set.extend(docID_author_dict[eligible_document_id])
             id_sets.append(eligible_document_id)
@@ -341,9 +343,10 @@ def dataset_preprocessing(dataset, min_records=10, kfolds=10, max_features=2000,
 
     preprocessed_dataset = []
     for id, skill_vector in zip(id_sets, skill_sets):
-        author_vector = []
+        author_vector = np.zeros(len(eligible_authors))
         for author_id in docID_author_dict[id]:
-            author_vector.extend([author_set.index(author_id)])
+            if author_id in eligible_authors:
+                author_vector[eligible_authors.index(author_id)] = 1
         author_vector = sparse.coo_matrix(author_vector)
         preprocessed_dataset.append([id, skill_vector, author_vector])
 
