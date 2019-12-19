@@ -6,10 +6,10 @@ from keras.datasets import mnist
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle as pkl
-import Evaluation.Evaluator as dblp_eval
-import Evaluation. plotter
-from Common.Utils import crossValidate
-from Evaluation import plotter
+import eval.evaluator as dblp_eval
+import eval. plotter
+from cmn.utils import crossValidate
+from eval import plotter
 
 seed = 7
 np.random.seed(seed)
@@ -43,7 +43,7 @@ y_test = y[ids[int(y.__len__() * (train_ratio + validation_ratio)):]]
 
 input_dim = x_train.shape[1]
 output_dim = y_train.shape[1]
-print("Input/Output dimensions ", input_dim, output_dim)
+print("Input/output dimensions ", input_dim, output_dim)
 # this is our input placeholder
 input_img = Input(shape=(input_dim,))
 lambda_val = 0.001  # Weight decay , refer : https://stackoverflow.com/questions/44495698/keras-difference-between-kernel-and-activity-regularizers

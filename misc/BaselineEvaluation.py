@@ -1,8 +1,8 @@
 import pickle as pkl
-from DataAccessLayer.load_dblp_data import *
-from Common.Utils import crossValidate
-import Evaluation.Evaluator as dblp_eval
-from Evaluation import plotter
+from dal.load_dblp_data import *
+from cmn.utils import crossValidate
+import eval.evaluator as dblp_eval
+from eval import plotter
 
 seed = 7
 np.random.seed(seed)
@@ -33,12 +33,12 @@ y_test = y[ids[int(y.__len__() * (train_ratio + validation_ratio)):]]
 
 input_dim = x_train.shape[1]
 output_dim = y_train.shape[1]
-print("Input/Output dimensions ", input_dim, output_dim)
+print("Input/output dimensions ", input_dim, output_dim)
 
 
 
 ### Writing target teams skills into file
-# skill_dir='../Dataset/invertedTermCount.txt'
+# skill_dir='../dataset/invertedTermCount.txt'
 # skills, skills_freq = load_skills(skill_dir)
 # skills = np.asarray(skills)
 #

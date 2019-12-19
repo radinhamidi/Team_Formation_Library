@@ -1,4 +1,4 @@
-from Backyard.k_sparse_autoencoder import KSparse, UpdateSparsityLevel, calculate_sparsity_levels
+from misc.k_sparse_autoencoder import KSparse, UpdateSparsityLevel, calculate_sparsity_levels
 from keras.layers import Input, Dense
 from keras.models import Model
 from keras.datasets import mnist
@@ -6,8 +6,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pickle as pkl
 import keras
-import Evaluation.Evaluator as dblp_eval
-from Common.Utils import crossValidate
+import eval.evaluator as dblp_eval
+from cmn.utils import crossValidate
 
 fax = './x_sampleset.pkl'
 fay = './y_sampleset.pkl'
@@ -38,7 +38,7 @@ y_test = y[ids[int(y.__len__() * (train_ratio + validation_ratio)):]]
 
 input_dim = x_train.shape[1]
 output_dim = y_train.shape[1]
-print("Input/Output dimensions ", input_dim, output_dim)
+print("Input/output dimensions ", input_dim, output_dim)
 # this is our input placeholder
 input_img = Input(shape=(input_dim,))
 
@@ -87,7 +87,7 @@ r_at_k_all = dblp_eval.init_eval_holder(evaluation_k_set) # all r@k of instances
 r_at_k_overall = dblp_eval.init_eval_holder(evaluation_k_set) # overall r@k of instances in one fold and one k_evaluation_set
 
 # @k evaluation process for last train batch data
-print("Evaluation on train data.")
+print("eval on train data.")
 for k in evaluation_k_set:
     # p@k evaluation
     print("Evaluating p@k for top {} records.".format(k))
@@ -103,7 +103,7 @@ for k in evaluation_k_set:
     print("For top {} in Train data:\nP@{}:{}\nR@{}:{}".format(k, k, p_at_k, k, r_at_k))
 
 # @k evaluation process for test data
-print("Evaluation on test data.")
+print("eval on test data.")
 for k in evaluation_k_set:
     # p@k evaluation
     print("Evaluating p@k for top {} records.".format(k))

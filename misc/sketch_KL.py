@@ -1,27 +1,13 @@
-'''
-These are our options:
-k-sparse - Done - Did not work on test data - probably not extract concept
-L1 regularization - Done - Didnt work that much
-KL Regularization - Done - Worked
-Custom optimization function
-Check CBOW
-Other todos:
-test precision and recall: Done - they are correct but there is a theoretical bug in p@k since true lables might be
-less than top k findings, therefore fome of predictions candidates will be wrong and cause error. Maybe we should set
-a upper bound for k equal to number of true candidates
-'''
-
 from keras import backend as K
 from keras import regularizers
 from keras.layers import Input, Dense
 from keras.models import Model
-import keras
 from keras.datasets import mnist
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle as pkl
-import Evaluation.Evaluator as dblp_eval
-from Common.Utils import crossValidate
+import eval.evaluator as dblp_eval
+from cmn.utils import crossValidate
 
 fax = './x_sampleset.pkl'
 fay = './y_sampleset.pkl'
@@ -35,11 +21,12 @@ seed = 7
 np.random.seed(seed)
 train_ratio = 0.8
 validation_ratio = 0.0
-epochs = 200
+epochs = 30
 batch_sizes = 8
 sp = 0.01
 b_val = 3  # Controls the acitvity of the hidden layer nodes
 encoding_dim = 3500
+
 
 # from keras.callbacks import ModelCheckpoint
 # from keras.models import Model, load_model, save_model, Sequential
@@ -62,35 +49,42 @@ y_train = y[ids[0:int(y.__len__() * train_ratio)]]
 y_validate = y[ids[int(y.__len__() * train_ratio):int(y.__len__() * (train_ratio + validation_ratio))]]
 y_test = y[ids[int(y.__len__() * (train_ratio + validation_ratio)):]]
 
+
 input_dim = x_train.shape[1]
 output_dim = y_train.shape[1]
-print("Input/Output dimensions ", input_dim, output_dim)
+print("Input/output dimensions ", input_dim, output_dim)
 # this is our input placeholder
 input_img = Input(shape=(input_dim,))
 lambda_val = 0.001  # Weight decay , refer : https://stackoverflow.com/questions/44495698/keras-difference-between-kernel-and-activity-regularizers
 
+# Custom Regularizer function
+def sparse_reg(activ_matrix):
+    p = 0.01
+    beta = 7
+    p_hat = K.mean(activ_matrix)  # average over the batch samples
+    print("p_hat = ", p_hat)
+    # KLD = p*(K.log(p)-K.log(p_hat)) + (1-p)*(K.log(1-p)-K.log(1-p_hat))
+    KLD = p * (K.log(p / p_hat)) + (1 - p) * (K.log((1 - p) / (1 - p_hat)))
+    print("KLD = ", KLD)
+    return beta * K.sum(KLD)  # sum over the layer units
+
+
 encoded = Dense(encoding_dim,
-                activation='sigmoid')(input_img)
+                activation='sigmoid',
+                kernel_regularizer=regularizers.l2(lambda_val / 2), activity_regularizer=sparse_reg)(input_img)
 
 decoded = Dense(output_dim,
-                activation='sigmoid')(encoded)
-
-
-# Define custom loss
-def custom_loss(y_true, y_pred):
-    # custom function here
-    return K.mean((y_pred - y_true), axis=-1)
-
+                activation='sigmoid',
+                kernel_regularizer=regularizers.l2(lambda_val / 2), activity_regularizer=sparse_reg)(
+    encoded)  # Switch to softmax here?
 
 autoencoder = Model(input_img, decoded)
-# sgd = keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-sgd = keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True, clipnorm=1, clipvalue=0.5)
-# autoencoder.compile(optimizer=sgd, loss=custom_loss)
-autoencoder.compile(optimizer=sgd, loss='binary_crossentropy')
+autoencoder.compile(optimizer='adagrad', loss='mean_absolute_error')  # What optimizer to use??
+
 
 # Removing normalization since using MSE - later
-# x_train = x_train.astype('float32')
-# x_test = x_test.astype('float32')
+x_train = x_train.astype('float32')
+x_test = x_test.astype('float32')
 
 x_train = x_train.reshape((len(x_train), np.prod(x_train.shape[1:])))
 x_test = x_test.reshape((len(x_test), np.prod(x_test.shape[1:])))
@@ -106,28 +100,23 @@ autoencoder.fit(x_train, y_train,
 
 print(autoencoder.summary())
 
+
 evaluation_k_set = np.arange(10, 1100, 100)
 
 # Defining evaluation scores holders for train data
-p_at_k_all_train = dblp_eval.init_eval_holder(
-    evaluation_k_set)  # all p@k of instances in one fold and one k_evaluation_set
-p_at_k_overall_train = dblp_eval.init_eval_holder(
-    evaluation_k_set)  # overall p@k of instances in one fold and one k_evaluation_set
-r_at_k_all_train = dblp_eval.init_eval_holder(
-    evaluation_k_set)  # all r@k of instances in one fold and one k_evaluation_set
-r_at_k_overall_train = dblp_eval.init_eval_holder(
-    evaluation_k_set)  # overall r@k of instances in one fold and one k_evaluation_set
+p_at_k_all_train = dblp_eval.init_eval_holder(evaluation_k_set) # all p@k of instances in one fold and one k_evaluation_set
+p_at_k_overall_train = dblp_eval.init_eval_holder(evaluation_k_set) # overall p@k of instances in one fold and one k_evaluation_set
+r_at_k_all_train = dblp_eval.init_eval_holder(evaluation_k_set) # all r@k of instances in one fold and one k_evaluation_set
+r_at_k_overall_train = dblp_eval.init_eval_holder(evaluation_k_set) # overall r@k of instances in one fold and one k_evaluation_set
 
 # Defining evaluation scores holders for test data
-p_at_k_all = dblp_eval.init_eval_holder(evaluation_k_set)  # all p@k of instances in one fold and one k_evaluation_set
-p_at_k_overall = dblp_eval.init_eval_holder(
-    evaluation_k_set)  # overall p@k of instances in one fold and one k_evaluation_set
-r_at_k_all = dblp_eval.init_eval_holder(evaluation_k_set)  # all r@k of instances in one fold and one k_evaluation_set
-r_at_k_overall = dblp_eval.init_eval_holder(
-    evaluation_k_set)  # overall r@k of instances in one fold and one k_evaluation_set
+p_at_k_all = dblp_eval.init_eval_holder(evaluation_k_set) # all p@k of instances in one fold and one k_evaluation_set
+p_at_k_overall = dblp_eval.init_eval_holder(evaluation_k_set) # overall p@k of instances in one fold and one k_evaluation_set
+r_at_k_all = dblp_eval.init_eval_holder(evaluation_k_set) # all r@k of instances in one fold and one k_evaluation_set
+r_at_k_overall = dblp_eval.init_eval_holder(evaluation_k_set) # overall r@k of instances in one fold and one k_evaluation_set
 
 # @k evaluation process for last train batch data
-print("Evaluation on train data.")
+print("eval on train data.")
 for k in evaluation_k_set:
     # p@k evaluation
     print("Evaluating p@k for top {} records.".format(k))
@@ -143,7 +132,7 @@ for k in evaluation_k_set:
     print("For top {} in Train data:\nP@{}:{}\nR@{}:{}".format(k, k, p_at_k, k, r_at_k))
 
 # @k evaluation process for test data
-print("Evaluation on test data.")
+print("eval on test data.")
 for k in evaluation_k_set:
     # p@k evaluation
     print("Evaluating p@k for top {} records.".format(k))
