@@ -17,7 +17,7 @@ def r_at_k(prediction, true, k=10):
                 recall += 1
         all_recall.append(recall / t_indices.__len__())
     return np.mean(all_recall), all_recall
- 
+
 def r_at_k_t2v(prediction, true, k=10):
     all_recall = []
     for pred, t in zip(prediction, true):
