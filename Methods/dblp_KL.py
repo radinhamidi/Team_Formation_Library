@@ -17,7 +17,7 @@ from keras import regularizers
 dataset_name = 'DBLP'
 method_name = 'KL'
 seed = 7
-epochs_in_batch = 10
+epochs_in_batch = 20
 epochs_overall = 20
 back_propagation_batch_size = 64
 k_fold = 10
