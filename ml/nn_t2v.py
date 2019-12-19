@@ -52,8 +52,8 @@ if dblp.ae_data_exist(file_path='../dataset/ae_t2v_dim{}_dataset.pkl'.format(emb
 else:
     if not dblp.ae_data_exist(file_path='../dataset/ae_dataset.pkl'):
         dblp.extract_data(filter_journals=True, skill_size_filter=min_skill_size, member_size_filter=min_member_size)
-    if not dblp.preprocessed_dataset_exist() or not dblp.Train_Test_indices_exist():
-        dblp.dataset_preprocessing(dblp.load_ae_dataset(file_path='../dataset/ae_dataset.pkl'), seed=seed)
+    if not dblp.preprocessed_dataset_exist() or not dblp.train_test_indices_exist():
+        dblp.dataset_preprocessing(dblp.load_ae_dataset(file_path='../dataset/ae_dataset.pkl', kfolds=k_fold), seed=seed)
     preprocessed_dataset = dblp.load_preprocessed_dataset()
 
     dblp.nn_t2v_dataset_generator(t2v_model, preprocessed_dataset, output_file_path='../dataset/ae_t2v_dim{}_dataset.pkl'.format(embedding_dim))

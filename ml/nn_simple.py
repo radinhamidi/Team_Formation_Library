@@ -47,8 +47,8 @@ if dblp.preprocessed_dataset_exist():
 else:
     if not dblp.ae_data_exist(file_path='../dataset/ae_dataset.pkl'):
         dblp.extract_data(filter_journals=True, skill_size_filter=min_skill_size, member_size_filter=min_member_size)
-    if not dblp.preprocessed_dataset_exist() and not dblp.Train_Test_indices_exist():
-        dblp.dataset_preprocessing(dblp.load_ae_dataset(file_path='../dataset/ae_dataset.pkl'), seed=seed)
+    if not dblp.preprocessed_dataset_exist() and not dblp.train_test_indices_exist():
+        dblp.dataset_preprocessing(dblp.load_ae_dataset(file_path='../dataset/ae_dataset.pkl', kfolds=k_fold), seed=seed)
     dataset = dblp.load_preprocessed_dataset()
 train_test_indices = dblp.load_train_test_indices()
 

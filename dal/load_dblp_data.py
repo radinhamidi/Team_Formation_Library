@@ -340,6 +340,15 @@ def dataset_preprocessing(dataset, min_records=10, kfolds=10, max_features=2000,
         author_vector = sparse.coo_matrix(author_vector)
         preprocessed_dataset.append([id, skill_vector, author_vector])
 
+    if save_to_pkl:
+        with open('{}'.format(preprocessed_dataset_file_path), 'wb') as f:
+            pkl.dump(preprocessed_dataset, f)
+
+    indices = split_data(kfolds, author_docID_dict, eligible_documents, shuffle_at_the_end, save_to_pkl, indices_dict_file_path)
+
+    return indices, preprocessed_dataset
+
+def split_data(kfolds, author_docID_dict, eligible_documents, shuffle_at_the_end, save_to_pkl, indices_dict_file_path):
     train_docs = []
     test_docs = []
     rule_violence_counter = 0
@@ -368,9 +377,7 @@ def dataset_preprocessing(dataset, min_records=10, kfolds=10, max_features=2000,
                 else:
                     test_docs.extend(eligible_samples_for_test_set)
 
-        train_docs.extend([ele for ele in list_of_author_docs if
-                           ele not in test_docs and ele not in train_docs])
-
+        train_docs.extend([ele for ele in list_of_author_docs if ele not in test_docs and ele not in train_docs])
 
     print("Number of Train docs: {}".format(len(train_docs)))
     print("Number of Test docs: {}".format(len(test_docs)))
@@ -386,37 +393,8 @@ def dataset_preprocessing(dataset, min_records=10, kfolds=10, max_features=2000,
     if save_to_pkl:
         with open('{}'.format(indices_dict_file_path), 'wb') as f:
             pkl.dump(indices, f)
-        with open('{}'.format(preprocessed_dataset_file_path), 'wb') as f:
-            pkl.dump(preprocessed_dataset, f)
 
-    return indices, preprocessed_dataset
-
-
-def Train_Test_indices_exist(file_path='../dataset/Train_Test_indices.pkl'):
-    if path.exists(file_path):
-        return True
-    else:
-        return False
-
-
-def load_train_test_indices(file_path='../dataset/Train_Test_indices.pkl'):
-    with open(file_path, 'rb') as f:
-        indices = pickle.load(f)
     return indices
-
-
-def preprocessed_dataset_exist(file_path='../dataset/dblp_preprocessed_dataset.pkl'):
-    if path.exists(file_path):
-        return True
-    else:
-        return False
-
-
-def load_preprocessed_dataset(file_path='../dataset/dblp_preprocessed_dataset.pkl'):
-    with open(file_path, 'rb') as f:
-        dataset = pickle.load(f)
-    return dataset
-
 
 def get_fold_data(fold_counter, dataset, train_test_indices):
     x_train = []
@@ -442,3 +420,23 @@ def get_fold_data(fold_counter, dataset, train_test_indices):
     print('dataset Size: {}'.format(len(dataset)))
     print('Train Size: {} Test Size: {}'.format(x_train.__len__(), x_test.__len__()))
     return x_train, y_train, x_test, y_test
+
+def train_test_indices_exist(file_path='../dataset/Train_Test_indices.pkl'):
+    if path.exists(file_path):
+        return True
+    return False
+
+def load_train_test_indices(file_path='../dataset/Train_Test_indices.pkl'):
+    with open(file_path, 'rb') as f:
+        indices = pickle.load(f)
+    return indices
+
+def preprocessed_dataset_exist(file_path='../dataset/dblp_preprocessed_dataset.pkl'):
+    if path.exists(file_path):
+        return True
+    return False
+
+def load_preprocessed_dataset(file_path='../dataset/dblp_preprocessed_dataset.pkl'):
+    with open(file_path, 'rb') as f:
+        dataset = pickle.load(f)
+    return dataset
