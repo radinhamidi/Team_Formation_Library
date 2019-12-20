@@ -182,21 +182,22 @@ class Team2Vec:
 
 def main_train_team2vec():
     import dal.load_dblp_data as dblp
-    if dblp.ae_data_exist(file_path='../dataset/ae_dataset.pkl'):
-        team_matrix = dblp.load_ae_dataset()
+    if dblp.preprocessed_dataset_exist(file_path='./dataset/dblp_preprocessed_dataset.pkl'):
+        team_matrix = dblp.preprocessed_dataset_exist()
     else:
         dblp.extract_data(filter_journals=True)
-        team_matrix = dblp.load_ae_dataset()
+        team_matrix = dblp.preprocessed_dataset_exist()
 
     t2v = Team2Vec()
 
-    help_str = 'team2vec.py [-m] [-s] [-d <dimension=100>] [-w <window=2>] \n-m: distributed memory mode; default=distributed bag of members\n-s: member type = skill; default = user'
+    help_str = 'team2vec.py [-m] [-s] [-d <dimension=100>] [-e <epochs=100>] [-w <window=2>] \n-m: distributed memory mode; default=distributed bag of members\n-s: member type = skill; default = user'
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hmsd:w:", ["dimension=", "window="])
     except getopt.GetoptError:
         print(help_str)
         sys.exit(2)
     dimension = 100
+    epochs = 100
     window = 2
     dm = 0
     member_type = 'user'
@@ -210,13 +211,15 @@ def main_train_team2vec():
             dm = 1
         elif opt in ("-d", "--dimension"):
             dimension = int(arg)
+        elif opt in ("-e", "--epochs"):
+            epochs = int(arg)
         elif opt in ("-w", "--window"):
             window = int(arg)
 
     t2v.init(team_matrix, member_type=member_type)
-    t2v.train(dimension=dimension, window=window, dist_mode=dm, output='./output/Team2Vec/', epochs=100)
-    t2v.plot_model('pca', output='./output/Team2Vec/')
-    t2v.plot_model('tsne', output='./output/Team2Vec/')
+    t2v.train(dimension=dimension, window=window, dist_mode=dm, output='./output/Models/T2V/', epochs=epochs)
+    t2v.plot_model('pca', output='./output/Figures/')
+    t2v.plot_model('tsne', output='./output/Figures/')
 
     # sample running string
     # python3 -u ./ml/team2vec.py -d 500 -w 2 -m 2>&1 |& tee  ./output/Team2Vec/log_d500_w2_m1.txt
@@ -229,7 +232,7 @@ def main_train_team2vec():
 
 
 if __name__ == "__main__":
-    # main_train_team2vec()
+    main_train_team2vec()
 
     # t2v = Team2Vec()
     # t2v.load_model('./output/Team2Vec/team_user/model_d500_w2_m1')

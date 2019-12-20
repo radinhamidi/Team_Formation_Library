@@ -272,7 +272,7 @@ def tokenize(text):
     return tokens
 
 def dataset_preprocessing(dataset, min_records=10, kfolds=10, max_features=2000, n_gram=3,
-                          dataset_source_dir='../dataset/dblp.pkl', shuffle_at_the_end=False,
+                          dataset_source_dir='../dataset/dblp.pkl', shuffle_at_the_end=True,
                           save_to_pkl=True, indices_dict_file_path='../dataset/Train_Test_indices.pkl',
                           preprocessed_dataset_file_path='../dataset/dblp_preprocessed_dataset.pkl', seed=7):
     random.seed(seed)
@@ -348,6 +348,7 @@ def dataset_preprocessing(dataset, min_records=10, kfolds=10, max_features=2000,
 
     return indices, preprocessed_dataset
 
+
 def split_data(kfolds, author_docID_dict, eligible_documents, shuffle_at_the_end, save_to_pkl, indices_dict_file_path):
     train_docs = []
     test_docs = []
@@ -385,8 +386,8 @@ def split_data(kfolds, author_docID_dict, eligible_documents, shuffle_at_the_end
           " existence of a paper from target author in test set: {}".format(rule_violence_counter))
 
     if shuffle_at_the_end:
-        train_docs = random.shuffle(train_docs)
-        test_docs = random.shuffle(test_docs)
+        random.shuffle(train_docs)
+        random.shuffle(test_docs)
 
     indices = {1: {'Train': train_docs, 'Test': test_docs}}
 
@@ -395,6 +396,7 @@ def split_data(kfolds, author_docID_dict, eligible_documents, shuffle_at_the_end
             pkl.dump(indices, f)
 
     return indices
+
 
 def get_fold_data(fold_counter, dataset, train_test_indices):
     x_train = []
@@ -421,20 +423,24 @@ def get_fold_data(fold_counter, dataset, train_test_indices):
     print('Train Size: {} Test Size: {}'.format(x_train.__len__(), x_test.__len__()))
     return x_train, y_train, x_test, y_test
 
+
 def train_test_indices_exist(file_path='../dataset/Train_Test_indices.pkl'):
     if path.exists(file_path):
         return True
     return False
+
 
 def load_train_test_indices(file_path='../dataset/Train_Test_indices.pkl'):
     with open(file_path, 'rb') as f:
         indices = pickle.load(f)
     return indices
 
+
 def preprocessed_dataset_exist(file_path='../dataset/dblp_preprocessed_dataset.pkl'):
     if path.exists(file_path):
         return True
     return False
+
 
 def load_preprocessed_dataset(file_path='../dataset/dblp_preprocessed_dataset.pkl'):
     with open(file_path, 'rb') as f:

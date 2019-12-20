@@ -33,10 +33,6 @@ evaluation_k_set = np.arange(1, k_max+1, 1)
 #nn settings
 epochs = 300
 back_propagation_batch_size = 64
-training_batch_size = 2000
-data_size_limit = 1000
-train_ratio = 0.7
-validation_ratio = 0.15
 min_skill_size = 0
 min_member_size = 0
 encoding_dim = 1000
@@ -53,7 +49,7 @@ else:
     if not dblp.ae_data_exist(file_path='../dataset/ae_dataset.pkl'):
         dblp.extract_data(filter_journals=True, skill_size_filter=min_skill_size, member_size_filter=min_member_size)
     if not dblp.preprocessed_dataset_exist() or not dblp.train_test_indices_exist():
-        dblp.dataset_preprocessing(dblp.load_ae_dataset(file_path='../dataset/ae_dataset.pkl', kfolds=k_fold), seed=seed)
+        dblp.dataset_preprocessing(dblp.load_ae_dataset(file_path='../dataset/ae_dataset.pkl'), seed=seed, kfolds=k_fold, shuffle_at_the_end=True)
     preprocessed_dataset = dblp.load_preprocessed_dataset()
 
     dblp.nn_t2v_dataset_generator(t2v_model, preprocessed_dataset, output_file_path='../dataset/ae_t2v_dim{}_dataset.pkl'.format(embedding_dim))
@@ -123,8 +119,6 @@ for fold_counter in range(1,k_fold+1):
                         shuffle=True,
                         verbose=2,
                         validation_data=(x_test, y_test))
-    # Cool down GPU
-    # time.sleep(300)
 
     score = autoencoder.evaluate(x_test, y_test)
     print('Test loss of fold {}: {}'.format(fold_counter, score))

@@ -34,7 +34,7 @@ evaluation_k_set = np.arange(1, k_max+1, 1)
 epochs_in_batch = 10
 epochs_overall = 20
 back_propagation_batch_size = 64
-training_batch_size = 1000
+training_batch_size = 4000
 min_skill_size = 0
 min_member_size = 0
 encoding_dim = 500
@@ -42,15 +42,16 @@ encoding_dim = 500
 
 print(K.tensorflow_backend._get_available_gpus())
 
-if dblp.preprocessed_dataset_exist():
+if dblp.preprocessed_dataset_exist() and dblp.train_test_indices_exist():
     dataset = dblp.load_preprocessed_dataset()
+    train_test_indices = dblp.load_train_test_indices()
 else:
     if not dblp.ae_data_exist(file_path='../dataset/ae_dataset.pkl'):
         dblp.extract_data(filter_journals=True, skill_size_filter=min_skill_size, member_size_filter=min_member_size)
-    if not dblp.preprocessed_dataset_exist() and not dblp.train_test_indices_exist():
-        dblp.dataset_preprocessing(dblp.load_ae_dataset(file_path='../dataset/ae_dataset.pkl', kfolds=k_fold), seed=seed)
+    if not dblp.preprocessed_dataset_exist() or not dblp.train_test_indices_exist():
+        dblp.dataset_preprocessing(dblp.load_ae_dataset(file_path='../dataset/ae_dataset.pkl'), seed=seed, kfolds=k_fold, shuffle_at_the_end=True)
     dataset = dblp.load_preprocessed_dataset()
-train_test_indices = dblp.load_train_test_indices()
+    train_test_indices = dblp.load_train_test_indices()
 
 # k_fold Cross Validation
 cvscores = []
@@ -64,7 +65,6 @@ r_at_k_all = dblp_eval.init_eval_holder(evaluation_k_set)  # all r@k of instance
 r_at_k_overall = dblp_eval.init_eval_holder(evaluation_k_set)  # overall r@k of instances in one fold and one k_evaluation_set
 
 lambda_val = 0.001  # Weight decay , refer : https://stackoverflow.com/questions/44495698/keras-difference-between-kernel-and-activity-regularizers
-
 
 time_str = time.strftime("%Y%m%d-%H%M%S")
 for fold_counter in range(1,k_fold+1):

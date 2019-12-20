@@ -105,24 +105,24 @@ venv.bak/
 
 # For Data files: ignore everythong but keep the strcuture. (gitkeep file is used to keep the structure)
 # exclude everything
-/Dataset/*
+/dataset/*
 # exception to the rule
-!Dataset/.gitkeep
-!Dataset/ae_dataset.pkl
+!dataset/.gitkeep
+!dataset/ae_dataset.pkl
 
 # For output files: ignore everythong but keep the strcuture. (gitkeep file is used to keep the structure)
 # exclude everything
-/Output/*
+/output/*
 # exception to the rule
-!Output/.gitkeep
-!Output/Figures/.gitkeep
-!Output/Models/.gitkeep
-!Output/Models/Weights/.gitkeep
-!Output/Models/T2V/.gitkeep
+!output/.gitkeep
+!output/Figures/.gitkeep
+!output/Models/.gitkeep
+!output/Models/Weights/.gitkeep
+!output/Models/T2V/.gitkeep
 
 
-/Backyard/*.pkl
-/Backyard/*.h5
+/misc/*.pkl
+/misc/*.h5
 
 .idea/misc.xml
 .idea/inspectionProfiles/Project_Default.xml
