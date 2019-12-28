@@ -156,7 +156,7 @@ def extract_data(filter_journals=False, size_limit=np.inf, skill_size_filter=0, 
 
     data = load_citation_pkl(source_dir)
     skills, skills_freq = load_skills(skill_dir)
-    authors, nameIDs = load_authors(author_dir)
+    authors, _ = load_authors(author_dir)
     skills = np.asarray(skills)
     authors = [author.strip().lower() for author in authors]
 
@@ -228,6 +228,7 @@ def filter_pubs(venue: str):
             break
     return found
 
+
 def nn_t2v_dataset_generator(model: Team2Vec, dataset, output_file_path):
     t2v_dataset = []
     counter = 1
@@ -271,9 +272,11 @@ def tokenize(text):
     tokens = [stemmer.stem(word) for word in tokens]
     return tokens
 
+
 def dataset_preprocessing(dataset, min_records=10, kfolds=10, max_features=2000, n_gram=3,
                           dataset_source_dir='../dataset/dblp.pkl', shuffle_at_the_end=True,
-                          save_to_pkl=True, indices_dict_file_path='../dataset/Train_Test_indices.pkl',
+                          save_to_pkl=True, save_to_csv=True, author_dir='../dataset/authorNameId.txt',
+                          indices_dict_file_path='../dataset/Train_Test_indices.pkl', baseline_path='../dataset/',
                           preprocessed_dataset_file_path='../dataset/dblp_preprocessed_dataset.pkl', seed=7):
     random.seed(seed)
     author_paper_counter = Counter()
@@ -325,12 +328,17 @@ def dataset_preprocessing(dataset, min_records=10, kfolds=10, max_features=2000,
             skill_sets.append(skill_set)
         else:
             eligible_documents.remove(eligible_document_id)
+            affected_authors = docID_author_dict[eligible_document_id]
             del docID_author_dict[eligible_document_id]
+            for author_docID_dict_key in affected_authors:
+                if eligible_document_id in author_docID_dict[author_docID_dict_key]:
+                    author_docID_dict[author_docID_dict_key].remove(eligible_document_id)
     author_set = np.unique(author_set).tolist()
 
     print('Number of eligible documents equal/more than {} records: {}'.format(min_records, len(eligible_documents)))
     print('Number of eligible authors equal/more than {} records: {}'.format(min_records, len(eligible_authors)))
 
+    eligible_documents = []
     preprocessed_dataset = []
     for id, skill_vector in zip(id_sets, skill_sets):
         author_vector = np.zeros(len(eligible_authors))
@@ -338,18 +346,48 @@ def dataset_preprocessing(dataset, min_records=10, kfolds=10, max_features=2000,
             if author_id in eligible_authors:
                 author_vector[eligible_authors.index(author_id)] = 1
         author_vector = sparse.coo_matrix(author_vector)
-        preprocessed_dataset.append([id, skill_vector, author_vector])
+        if len(skill_vector.nonzero()[1])>0 and len(author_vector.nonzero()[1])>0:
+            preprocessed_dataset.append([id, skill_vector, author_vector])
+            eligible_documents.append(id)
 
     if save_to_pkl:
         with open('{}'.format(preprocessed_dataset_file_path), 'wb') as f:
             pkl.dump(preprocessed_dataset, f)
 
-    indices = split_data(kfolds, author_docID_dict, eligible_documents, shuffle_at_the_end, save_to_pkl, indices_dict_file_path)
+    indices = split_data(kfolds, author_docID_dict, eligible_documents, shuffle_at_the_end, save_to_pkl, save_to_csv,
+                         indices_dict_file_path, baseline_path)
+
+    train_docs = indices[1]['Train']
+    test_docs = indices[1]['Test']
+    authorNames, _ = load_authors(author_dir)
+    authorNames = [author.strip().lower() for author in authorNames]
+
+    feature_names = np.asarray(vect.get_feature_names())
+    if save_to_csv:
+        with open('{}baseline_authorName_skill_train.csv'.format(baseline_path), 'w') as f:
+            for eligible_author in eligible_authors:
+                docIDs = author_docID_dict[eligible_author]
+                docIDs = [docID for docID in docIDs if docID in train_docs]
+                docsTitles = [d['title'].strip() for d in data[docIDs]]
+                features = Counter()
+                for title in docsTitles:
+                    features.update(feature_names[vect.transform([title]).nonzero()[1]])
+                line = [authorNames[eligible_author]]
+                line.extend(features.keys())
+                f.write(','.join(line)+'\n')
+            f.close()
+        with open('{}baseline_skill_test.csv'.format(baseline_path), 'w') as f:
+            docsTitles = [d['title'].strip() for d in data[test_docs]]
+            for docTitle in docsTitles:
+                line = feature_names[vect.transform([docTitle]).nonzero()[1]]
+                f.write(','.join(line)+'\n')
+            f.close()
 
     return indices, preprocessed_dataset
 
 
-def split_data(kfolds, author_docID_dict, eligible_documents, shuffle_at_the_end, save_to_pkl, indices_dict_file_path):
+def split_data(kfolds, author_docID_dict, eligible_documents, shuffle_at_the_end, save_to_pkl, save_to_csv,
+               indices_dict_file_path, baseline_path):
     train_docs = []
     test_docs = []
     rule_violence_counter = 0
@@ -389,11 +427,21 @@ def split_data(kfolds, author_docID_dict, eligible_documents, shuffle_at_the_end
         random.shuffle(train_docs)
         random.shuffle(test_docs)
 
+    # only for fold: 1
     indices = {1: {'Train': train_docs, 'Test': test_docs}}
 
     if save_to_pkl:
         with open('{}'.format(indices_dict_file_path), 'wb') as f:
             pkl.dump(indices, f)
+
+    # only for fold: 1
+    if save_to_csv:
+        with open('{}baseline_train_indices.csv'.format(baseline_path), 'w') as f:
+            f.write(','.join(str(x) for x in train_docs) + '\n')
+            f.close()
+        with open('{}baseline_test_indices.csv'.format(baseline_path), 'w') as f:
+            f.write(','.join(str(x) for x in test_docs) + '\n')
+            f.close()
 
     return indices
 
