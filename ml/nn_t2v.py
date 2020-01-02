@@ -35,7 +35,7 @@ epochs = 300
 back_propagation_batch_size = 64
 min_skill_size = 0
 min_member_size = 0
-encoding_dim = 1000
+encoding_dim = 2000
 
 print(K.tensorflow_backend._get_available_gpus())
 

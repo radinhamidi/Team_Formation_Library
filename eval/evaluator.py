@@ -9,7 +9,11 @@ def r_at_k(prediction, true, k=10):
         t_indices = np.argwhere(t)
         if t_indices.__len__() == 0:
             continue
-        pred_indices = pred.argsort()[-k:][::-1]
+        pred_indices = pred.argsort()[-k:][::-1] #sorting checkup
+        pred_indices = list(pred_indices)
+        for i in pred_indices:
+            if i not in np.argwhere(pred):
+                pred_indices.remove(i)
 
         recall = 0
         for t_index in t_indices:

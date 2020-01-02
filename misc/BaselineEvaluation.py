@@ -62,7 +62,7 @@ def calc_r_at_k(prediction, true):
     return np.mean(all_recall), all_recall
 
 
-authorNameIds = pandas.read_csv('./baselineOutputs/authorNameID.txt', encoding='utf_8', header=None, delimiter='	', names=["NameID", "Author"])
+authorNameIds = pandas.read_csv('./baselineOutputs/authorNameId.txt', encoding='utf_8', header=None, delimiter='	', names=["NameID", "Author"])
 with open('./baselineOutputs/test_authors.csv', 'r') as f:
     predictions = []
     lines = f.readlines()

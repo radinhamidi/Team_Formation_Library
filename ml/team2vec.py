@@ -7,9 +7,12 @@ Created on Thursday Nov 21 2019
 
 import gensim, numpy, pylab, random, pickle
 import os, getopt, sys, multiprocessing
+
 sys.path.extend(['./../team_formation'])
 
 from cmn.tsne import tsne, pca
+
+
 # teams as documents, members as words
 # doc_list = ['u1 u2 u3','u2 u3','u1 u2 u1 u2']
 # label_list = ['t1','t2','t3']
@@ -18,7 +21,7 @@ class Team2Vec:
     def __init__(self):
         self.teams = []
 
-    def init(self, team_matrix, member_type='user'):#member_type={'user','skill'}
+    def init(self, team_matrix, member_type='user'):  # member_type={'user','skill'}
         teams_label = []
         # teams_skils = []
         teams_members = []
@@ -26,7 +29,7 @@ class Team2Vec:
             teams_label.append(team[0])
             if member_type == 'skill':
                 teams_members.append(team[1].col)
-            else: #member_type == 'user'
+            else:  # member_type == 'user'
                 teams_members.append(team[2].col)
 
         for index, team in enumerate(teams_members):
@@ -38,7 +41,7 @@ class Team2Vec:
     def train(self, dimension=300, window=2, dist_mode=1, epochs=100, output='./output/Models/T2V/'):
 
         self.settings = 'd' + str(dimension) + '_w' + str(window) + '_m' + str(dist_mode)
-        print('training settings: %s\n'%self.settings)
+        print('training settings: %s\n' % self.settings)
 
         # build the model
         # alpha=0.025
@@ -57,20 +60,22 @@ class Team2Vec:
         # comment=None
         # trim_rule=None
 
-        self.model = gensim.models.Doc2Vec(dm=dist_mode,#({1,0}, optional) – Defines the training algorithm. If dm=1, ‘distributed memory’ (PV-DM) is used. Otherwise, distributed bag of words (PV-DBOW) is employed.
-                                      vector_size=dimension,
-                                      window=window,
-                                      dbow_words=1, #({1,0}, optional) – If set to 1 trains word-vectors (in skip-gram fashion) simultaneous with DBOW doc-vector training; If 0, only trains doc-vectors (faster).
-                                      min_alpha=0.025,
-                                      min_count=0,
-                                      workers=multiprocessing.cpu_count())
+        self.model = gensim.models.Doc2Vec(dm=dist_mode,
+                                           # ({1,0}, optional) – Defines the training algorithm. If dm=1, ‘distributed memory’ (PV-DM) is used. Otherwise, distributed bag of words (PV-DBOW) is employed.
+                                           vector_size=dimension,
+                                           window=window,
+                                           dbow_words=1,
+                                           # ({1,0}, optional) – If set to 1 trains word-vectors (in skip-gram fashion) simultaneous with DBOW doc-vector training; If 0, only trains doc-vectors (faster).
+                                           min_alpha=0.025,
+                                           min_count=0,
+                                           workers=multiprocessing.cpu_count())
         self.model.build_vocab(self.teams)
 
         # start training
         for e in range(epochs):
             if not (e % 10):
                 print('iteration {0}'.format(e))
-            self.model.train(self.teams, total_examples = self.model.corpus_count, epochs = self.model.epochs)
+            self.model.train(self.teams, total_examples=self.model.corpus_count, epochs=self.model.epochs)
             self.model.alpha -= 0.002  # decrease the learning rate
             self.model.min_alpha = self.model.alpha  # fix the learning rate, no decay
 
@@ -107,21 +112,25 @@ class Team2Vec:
         return self.model.docvecs.most_similar(str(tid), topn=topn)
 
     def load_model(self, modelfile, includeTeams=False):
-        #ModuleNotFoundError: No module named 'numpy.random._pickle': numpy version conflict when saving and loading
+        # ModuleNotFoundError: No module named 'numpy.random._pickle': numpy version conflict when saving and loading
         self.model = gensim.models.Doc2Vec.load(modelfile)
         if includeTeams:
             with open(modelfile.replace('model', 'teams'), 'rb') as f:
                 self.teams = pickle.load(f)
 
     def get_member_most_similar_by_vector(self, mvec, topn=10):
-        return self.model.wv.similar_by_vector(mvec, topn=topn)
+        similar_list = self.model.wv.similar_by_vector(mvec, topn=topn)  # is it sorted?
+        similar_list.sort(key=lambda x: x[1], reverse=True)  # now it is sorted :)
+        return similar_list
 
     def get_team_most_similar_by_vector(self, tvec, topn=10):
-        return self.model.similar_by_vector(tvec, topn=topn)
+        similar_list = self.model.similar_by_vector(tvec, topn=topn)  # is it sorted?
+        similar_list.sort(key=lambda x: x[1], reverse=True)  # now it is sorted :)
+        return similar_list
 
     def infer_team_vector(self, members):
         iv = self.model.infer_vector(members)
-        return iv, self. model.docvecs.most_similar([iv])
+        return iv, self.model.docvecs.most_similar([iv])
 
     def plot_model(self, method='pca', memberids=None, teamids=None, output='./'):
         team_vecs = []
@@ -248,5 +257,3 @@ if __name__ == "__main__":
     #     except:
     #         print('{} not found!'.format(id))
     pass
-
-
