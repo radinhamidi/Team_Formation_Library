@@ -18,7 +18,7 @@ def r_at_k(prediction, true, k=10):
         for t_index in t_indices:
             if t_index in pred_indices:
                 recall += 1
-        all_recall.append(recall / np.minimum(len(t_indices), k))
+        all_recall.append(recall / len(t_indices))
     return np.mean(all_recall), all_recall
 
 def r_at_k_t2v(prediction, true, k=10):
@@ -67,7 +67,7 @@ def init_eval_holder(evaluation_k_set=None):
     return dict
 
 #[u4, u1, u7, u2] va [u1, u2, u7]
-print(r_at_k([[0.3, 0.1, 0, 0.5, 0, 0, 0.2]], [[1,1,0,0,0,0,1]], k=1))#1.0
-print(r_at_k([[0.3, 0.1, 0, 0.5, 0, 0, 0.2]], [[1,1,0,0,0,0,1]], k=2))#0.5
-print(r_at_k([[0.3, 0.1, 0, 0.5, 0, 0, 0.2]], [[1,1,0,0,0,0,1]], k=3))#0.66
+print(r_at_k([[0.3, 0.1, 0, 0.5, 0, 0, 0.2]], [[1,1,0,0,0,0,1]], k=1))#0/3
+print(r_at_k([[0.3, 0.1, 0, 0.5, 0, 0, 0.2]], [[1,1,0,0,0,0,1]], k=2))#1/3
+print(r_at_k([[0.3, 0.1, 0, 0.5, 0, 0, 0.2]], [[1,1,0,0,0,0,1]], k=3))#2/3
 print(r_at_k([[0.3, 0.1, 0, 0.5, 0, 0, 0.2]], [[1,1,0,0,0,0,1]], k=4))#1.0
