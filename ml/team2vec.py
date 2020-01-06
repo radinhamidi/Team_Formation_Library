@@ -20,14 +20,16 @@ from cmn.tsne import tsne, pca
 class Team2Vec:
     def __init__(self):
         self.teams = []
+        self.member_type = ''
 
     def init(self, team_matrix, member_type='user'):  # member_type={'user','skill'}
+        self.member_type = member_type
         teams_label = []
         # teams_skils = []
         teams_members = []
         for team in team_matrix:
             teams_label.append(team[0])
-            if member_type == 'skill':
+            if member_type.lower() == 'skill':
                 teams_members.append(team[1].col)
             else:  # member_type == 'user'
                 teams_members.append(team[2].col)
@@ -40,7 +42,7 @@ class Team2Vec:
 
     def train(self, dimension=300, window=2, dist_mode=1, epochs=100, output='./output/Models/T2V/'):
 
-        self.settings = 'd' + str(dimension) + '_w' + str(window) + '_m' + str(dist_mode)
+        self.settings = 'd' + str(dimension) + '_w' + str(window) + '_m' + str(dist_mode) + '_t' + str(self.member_type.capitalize())
         print('training settings: %s\n' % self.settings)
 
         # build the model

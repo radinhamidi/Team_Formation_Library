@@ -193,5 +193,5 @@ print('Loss for each fold: {}'.format(cvscores))
 
 compare_submit = input('Submit for compare? (y/n)')
 if compare_submit.lower() == 'y':
-    with open('../misc/KL_r_at_k_50.pkl', 'wb') as f:
+    with open('../misc/{]_r_at_k_50.pkl'.format(method_name), 'wb') as f:
         pkl.dump(r_at_k_overall, f)

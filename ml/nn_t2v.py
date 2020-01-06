@@ -1,16 +1,9 @@
-import glob
 import pickle as pkl
-import numpy as np
 import time
-
 from keras.layers import Input, Dense
 from keras.models import Model
-from keras import backend as K
-from keras.utils import plot_model
 from keras import regularizers
-from sklearn.model_selection import KFold
 from contextlib import redirect_stdout
-
 import cmn.utils
 from cmn.utils import *
 import dal.load_dblp_data as dblp
@@ -23,7 +16,7 @@ np.random.seed(seed)
 
 #settings
 dataset_name = 'DBLP'
-method_name = 'T2V'
+method_name = 'T2V_user'
 
 #eval settings
 k_fold = 10

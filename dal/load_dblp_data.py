@@ -7,6 +7,7 @@ import pickle as pkl
 from sklearn.feature_extraction.text import TfidfVectorizer
 from nltk.tokenize import word_tokenize, RegexpTokenizer
 from nltk.stem.porter import PorterStemmer
+from nltk.corpus import stopwords
 
 from ml.team2vec import *
 
@@ -229,19 +230,29 @@ def filter_pubs(venue: str):
     return found
 
 
-def nn_t2v_dataset_generator(model: Team2Vec, dataset, output_file_path):
+def nn_t2v_dataset_generator(model: Team2Vec, dataset, output_file_path, mode='user'):
     t2v_dataset = []
     counter = 1
     for record in dataset:
         id = record[0]
-        try:
-            skill_vec = record[1].todense()
-            team_vec = model.get_team_vec(id)
-            t2v_dataset.append([id, skill_vec, team_vec])
-            print('Record #{} | File #{} appended to dataset.'.format(counter, id))
-            counter += 1
-        except:
-            print('Cannot add record with id {}'.format(id))
+        if mode.lower() == 'user':
+            try:
+                skill_vec = record[1].todense()
+                team_vec = model.get_team_vec(id)
+                t2v_dataset.append([id, skill_vec, team_vec])
+                print('Record #{} | File #{} appended to dataset.'.format(counter, id))
+                counter += 1
+            except:
+                print('Cannot add record with id {}'.format(id))
+        elif mode.lower() == 'skill':
+            try:
+                skill_vec = model.get_team_vec(id)
+                team_vec = record[2].todense()
+                t2v_dataset.append([id, skill_vec, team_vec])
+                print('Record #{} | File #{} appended to dataset.'.format(counter, id))
+                counter += 1
+            except:
+                print('Cannot add record with id {}'.format(id))
     with open(output_file_path, 'wb') as f:
         pickle.dump(t2v_dataset, f)
 
@@ -305,7 +316,7 @@ def dataset_preprocessing(dataset, min_records=10, kfolds=10, max_features=2000,
     eligible_titles = []
     for eligible_paper in data[eligible_documents]:
         eligible_titles.append(eligible_paper['title'].strip())
-    vect = TfidfVectorizer(tokenizer=tokenize, analyzer='word', lowercase=True, stop_words='english',
+    vect = TfidfVectorizer(tokenizer=tokenize, analyzer='word', lowercase=True, stop_words=stopwords.words('english'),
                            ngram_range=(1, n_gram), max_features=max_features)
     vect.fit(eligible_titles)
 
@@ -321,7 +332,7 @@ def dataset_preprocessing(dataset, min_records=10, kfolds=10, max_features=2000,
     id_sets = []
     for eligible_document_id in eligible_documents:
         skill_set = vect.transform([data[eligible_document_id]['title'].strip()])
-        skill_set.tocoo()
+        skill_set = skill_set.tocoo()
         if skill_set.count_nonzero() > 0:
             author_set.extend(docID_author_dict[eligible_document_id])
             id_sets.append(eligible_document_id)
@@ -346,7 +357,7 @@ def dataset_preprocessing(dataset, min_records=10, kfolds=10, max_features=2000,
             if author_id in eligible_authors:
                 author_vector[eligible_authors.index(author_id)] = 1
         author_vector = sparse.coo_matrix(author_vector)
-        if len(skill_vector.nonzero()[1])>0 and len(author_vector.nonzero()[1])>0:
+        if len(skill_vector.nonzero()[1]) > 0 and len(author_vector.nonzero()[1]) > 0:
             preprocessed_dataset.append([id, skill_vector, author_vector])
             eligible_documents.append(id)
 
@@ -374,13 +385,13 @@ def dataset_preprocessing(dataset, min_records=10, kfolds=10, max_features=2000,
                     features.update(feature_names[vect.transform([title]).nonzero()[1]])
                 line = [authorNames[eligible_author]]
                 line.extend(features.keys())
-                f.write(','.join(line)+'\n')
+                f.write(','.join(line) + '\n')
             f.close()
         with open('{}baseline_skill_test.csv'.format(baseline_path), 'w') as f:
             docsTitles = [d['title'].strip() for d in data[test_docs]]
             for docTitle in docsTitles:
                 line = feature_names[vect.transform([docTitle]).nonzero()[1]]
-                f.write(','.join(line)+'\n')
+                f.write(','.join(line) + '\n')
             f.close()
 
     return indices, preprocessed_dataset
