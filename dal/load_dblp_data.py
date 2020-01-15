@@ -230,7 +230,7 @@ def filter_pubs(venue: str):
     return found
 
 
-def nn_t2v_dataset_generator(model: Team2Vec, dataset, output_file_path, mode='user'):
+def nn_t2v_dataset_generator(model, dataset, output_file_path, mode='user'):
     t2v_dataset = []
     counter = 1
     for record in dataset:
@@ -248,6 +248,17 @@ def nn_t2v_dataset_generator(model: Team2Vec, dataset, output_file_path, mode='u
             try:
                 skill_vec = model.get_team_vec(id)
                 team_vec = record[2].todense()
+                t2v_dataset.append([id, skill_vec, team_vec])
+                print('Record #{} | File #{} appended to dataset.'.format(counter, id))
+                counter += 1
+            except:
+                print('Cannot add record with id {}'.format(id))
+        elif mode.lower() == 'full':
+            try:
+                model_skill = model['skill']
+                model_user = model['user']
+                skill_vec = model_skill.get_team_vec(id)
+                team_vec = model_user.get_team_vec(id)
                 t2v_dataset.append([id, skill_vec, team_vec])
                 print('Record #{} | File #{} appended to dataset.'.format(counter, id))
                 counter += 1

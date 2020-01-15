@@ -5,6 +5,7 @@ from keras.layers import Lambda
 from keras.losses import mse, binary_crossentropy, mae, kld, categorical_crossentropy
 import time
 import pickle as pkl
+from keras import regularizers
 import cmn.utils
 from keras.layers import Input, Dense
 from keras.models import Model
@@ -21,7 +22,7 @@ np.random.seed(seed)
 
 #running settings
 dataset_name = 'DBLP'
-method_name = 'T2V_skill_VAE'
+method_name = 'T2V_skill_KL'
 
 #eval settings
 k_fold = 10
@@ -34,7 +35,7 @@ back_propagation_batch_size = 64
 training_batch_size = 6000
 min_skill_size = 0
 min_member_size = 0
-latent_dim = 50
+encoding_dim = 1000
 
 print(K.tensorflow_backend._get_available_gpus())
 
@@ -60,22 +61,7 @@ else:
 # reparameterization trick
 # instead of sampling from Q(z|X), sample epsilon = N(0,I)
 # z = z_mean + sqrt(var) * epsilon
-def sampling(args):
-    """Reparameterization trick by sampling from an isotropic unit Gaussian.
 
-    # Arguments
-        args (tensor): mean and log of variance of Q(z|X)
-
-    # Returns
-        z (tensor): sampled latent vector
-    """
-
-    z_mean, z_log_var = args
-    batch = K.shape(z_mean)[0]
-    dim = K.int_shape(z_mean)[1]
-    # by default, random_normal has mean = 0 and std = 1.0
-    epsilon = K.random_normal(shape=(batch, dim))
-    return z_mean + K.exp(0.5 * z_log_var) * epsilon
 
 
 if dblp.preprocessed_dataset_exist() and dblp.train_test_indices_exist():
@@ -100,63 +86,25 @@ r_at_k_overall_train = dblp_eval.init_eval_holder(evaluation_k_set)  # overall r
 r_at_k_all = dblp_eval.init_eval_holder(evaluation_k_set)  # all r@k of instances in one fold and one k_evaluation_set
 r_at_k_overall = dblp_eval.init_eval_holder(evaluation_k_set)  # overall r@k of instances in one fold and one k_evaluation_set
 
+lambda_val = 0.001  # Weight decay , refer : https://stackoverflow.com/questions/44495698/keras-difference-between-kernel-and-activity-regularizers
+
 time_str = time.strftime("%Y%m%d-%H%M%S")
 for fold_counter in range(1,k_fold+1):
     x_train, y_train, x_test, y_test = dblp.get_fold_data(fold_counter, dataset, train_test_indices)
 
-    input_dim = x_train.shape[1]
-    output_dim = y_train.shape[1]
+    input_dim = x_train[0].shape[0]
+    output_dim = y_train[0].shape[0]
     print("Input/output Dimensions:  ", input_dim, output_dim)
-
     # this is our input placeholder
-    # network parameters
-    intermediate_dim_encoder = input_dim
-    intermediate_dim_decoder = output_dim
+    input_img = Input(shape=(input_dim,))
 
-    # VAE model = encoder + decoder
-    # build encoder model
-    inputs = Input(shape=(input_dim,), name='encoder_input')
-    x = Dense(intermediate_dim_encoder, activation='relu')(inputs)
-    z_mean = Dense(latent_dim, name='z_mean')(x)
-    z_log_var = Dense(latent_dim, name='z_log_var')(x)
+    encoded = Dense(encoding_dim, activation='sigmoid', kernel_regularizer=regularizers.l2(lambda_val / 2),
+                    activity_regularizer=sparse_reg)(input_img)
+    decoded = Dense(output_dim, activation='sigmoid', kernel_regularizer=regularizers.l2(lambda_val / 2),
+                    activity_regularizer=sparse_reg)(encoded)
+    autoencoder = Model(inputs=input_img, outputs=decoded)
+    autoencoder.compile(optimizer='adagrad', loss='mse')
 
-    # use reparameterization trick to push the sampling out as input
-    # note that "output_shape" isn't necessary with the TensorFlow backend
-    z = Lambda(sampling, output_shape=(latent_dim,), name='z')([z_mean, z_log_var])
-
-    # instantiate encoder model
-    encoder = Model(inputs, [z_mean, z_log_var, z], name='encoder')
-    encoder.summary()
-    # plot_model(encoder, to_file='vae_mlp_encoder.png', show_shapes=True)
-
-    # build decoder model
-    latent_inputs = Input(shape=(latent_dim,), name='z_sampling')
-    x = Dense(intermediate_dim_decoder, activation='relu')(latent_inputs)
-    outputs = Dense(output_dim, activation='sigmoid')(x)
-
-    # instantiate decoder model
-    decoder = Model(latent_inputs, outputs, name='decoder')
-    decoder.summary()
-    # plot_model(decoder, to_file='vae_mlp_decoder.png', show_shapes=True)
-
-    # instantiate VAE model
-    outputs = decoder(encoder(inputs)[2])
-    autoencoder = Model(inputs, outputs, name='vae_mlp')
-
-    models = (encoder, decoder)
-
-    def vae_loss(y_true, y_pred):
-        reconstruction_loss = mse(y_true, y_pred)
-
-        reconstruction_loss *= output_dim
-        kl_loss = 1 + z_log_var - K.square(z_mean) - K.exp(z_log_var)
-        kl_loss = K.sum(kl_loss, axis=-1)
-        kl_loss *= -0.5
-        vae_loss = K.mean(reconstruction_loss + kl_loss)
-        return vae_loss
-    autoencoder.compile(optimizer='adam', loss=vae_loss)
-    autoencoder.summary()
-    # autoencoder.compile(optimizer='adagrad', loss='cross_entropy')
 
     # Loading model weights
     load_weights_from_file_q = input('Load weights from file? (y/n)')
@@ -220,7 +168,7 @@ for fold_counter in range(1,k_fold+1):
         "../output/Models/Weights/{}_{}_Time{}_Fold{}.h5".format(dataset_name, method_name, time_str, fold_counter))
 
     with open('../output/Models/{}_{}_Time{}_EncodingDim{}_Fold{}_Loss{}_Epoch{}_kFold{}_BatchBP{}_BatchTraining{}.txt'
-                    .format(dataset_name, method_name, time_str, embedding_dim, fold_counter, int(score * 1000),
+                    .format(dataset_name, method_name, time_str, encoding_dim, fold_counter, int(score * 1000),
                             epochs, k_fold, back_propagation_batch_size, training_batch_size), 'w') as f:
         with redirect_stdout(f):
             autoencoder.summary()
@@ -250,6 +198,6 @@ print('Loss for each fold: {}'.format(cvscores))
 
 compare_submit = input('Submit for compare? (y/n)')
 if compare_submit.lower() == 'y':
-    with open('../misc/{}_dim{}_r_at_k_50.pkl'.format(method_name, embedding_dim), 'wb') as f:
+    with open('../misc/{}_KL_dim{}_r_at_k_50.pkl'.format(method_name, embedding_dim), 'wb') as f:
 
         pkl.dump(r_at_k_overall, f)

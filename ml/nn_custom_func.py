@@ -19,3 +19,9 @@ def batch_generator(iterable, n=10):
     for ndx in range(0, l, n):
         batch_length = min(ndx + n, l) - ndx
         yield np.asarray([record[0].todense() for record in iterable[ndx:min(ndx + n, l)]]).reshape(batch_length, -1)
+
+def batch_generator_dense(iterable, n=10):
+    l = len(iterable)
+    for ndx in range(0, l, n):
+        batch_length = min(ndx + n, l) - ndx
+        yield np.asarray([record for record in iterable[ndx:min(ndx + n, l)]]).reshape(batch_length, -1)

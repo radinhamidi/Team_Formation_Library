@@ -5,56 +5,15 @@ from keras.layers import Lambda
 from keras.losses import mse, binary_crossentropy, mae, kld, categorical_crossentropy
 import time
 import pickle as pkl
-import cmn.utils
-from keras.layers import Input, Dense
-from keras.models import Model
 from contextlib import redirect_stdout
+from keras.layers import Input, Dense, concatenate
+# from keras.layers.merge import Concatenate
+from keras.models import Model
 import cmn.utils
-from cmn.utils import *
 import dal.load_dblp_data as dblp
 import eval.evaluator as dblp_eval
+from cmn.utils import *
 from ml.nn_custom_func import *
-
-# fix random seed for reproducibility
-seed = 7
-np.random.seed(seed)
-
-#running settings
-dataset_name = 'DBLP'
-method_name = 'T2V_skill_VAE'
-
-#eval settings
-k_fold = 10
-k_max = 50 #cut_off for recall
-evaluation_k_set = np.arange(1, k_max+1, 1)
-
-#nn settings
-epochs = 300
-back_propagation_batch_size = 64
-training_batch_size = 6000
-min_skill_size = 0
-min_member_size = 0
-latent_dim = 50
-
-print(K.tensorflow_backend._get_available_gpus())
-
-t2v_model = Team2Vec()
-t2v_model = load_T2V_model(t2v_model)
-embedding_dim = t2v_model.model.vector_size
-
-if dblp.ae_data_exist(file_path='../dataset/ae_t2v_dim{}_tSkill_dataset.pkl'.format(embedding_dim)):
-    dataset = dblp.load_ae_dataset(file_path='../dataset/ae_t2v_dim{}_tSkill_dataset.pkl'.format(embedding_dim))
-else:
-    if not dblp.ae_data_exist(file_path='../dataset/ae_dataset.pkl'):
-        dblp.extract_data(filter_journals=True, skill_size_filter=min_skill_size, member_size_filter=min_member_size)
-    if not dblp.preprocessed_dataset_exist() or not dblp.train_test_indices_exist():
-        dblp.dataset_preprocessing(dblp.load_ae_dataset(file_path='../dataset/ae_dataset.pkl'), seed=seed, kfolds=k_fold, shuffle_at_the_end=True)
-    preprocessed_dataset = dblp.load_preprocessed_dataset()
-
-    dblp.nn_t2v_dataset_generator(t2v_model, preprocessed_dataset, output_file_path='../dataset/ae_t2v_dim{}_tSkill_dataset.pkl'.format(embedding_dim), mode='skill')
-    del preprocessed_dataset
-    dataset = dblp.load_ae_dataset(file_path='../dataset/ae_t2v_dim{}_tSkill_dataset.pkl'.format(embedding_dim))
-
 
 
 # reparameterization trick
@@ -78,15 +37,58 @@ def sampling(args):
     return z_mean + K.exp(0.5 * z_log_var) * epsilon
 
 
+# fix random seed for reproducibility
+seed = 7
+np.random.seed(seed)
+
+#running settings
+dataset_name = 'DBLP'
+method_name = 'T2V_Skill_VAE_Hybrid'
+
+#eval settings
+k_fold = 10
+k_max = 50 #cut_off for recall
+evaluation_k_set = np.arange(1, k_max+1, 1)
+
+#nn settings
+epochs_in_batch = 10
+epochs_overall = 10
+back_propagation_batch_size = 64
+training_batch_size = 6000
+min_skill_size = 0
+min_member_size = 0
+latent_dim = 50
+
+print(K.tensorflow_backend._get_available_gpus())
+
+
+t2v_model = Team2Vec()
+t2v_model = load_T2V_model(t2v_model)
+embedding_dim = t2v_model.model.vector_size
+
+if dblp.ae_data_exist(file_path='../dataset/ae_t2v_dim{}_tSkill_dataset.pkl'.format(embedding_dim)):
+    dataset_t2v = dblp.load_ae_dataset(file_path='../dataset/ae_t2v_dim{}_tSkill_dataset.pkl'.format(embedding_dim))
+else:
+    if not dblp.ae_data_exist(file_path='../dataset/ae_dataset.pkl'):
+        dblp.extract_data(filter_journals=True, skill_size_filter=min_skill_size, member_size_filter=min_member_size)
+    if not dblp.preprocessed_dataset_exist() or not dblp.train_test_indices_exist():
+        dblp.dataset_preprocessing(dblp.load_ae_dataset(file_path='../dataset/ae_dataset.pkl'), seed=seed, kfolds=k_fold, shuffle_at_the_end=True)
+    preprocessed_dataset = dblp.load_preprocessed_dataset()
+
+    dblp.nn_t2v_dataset_generator(t2v_model, preprocessed_dataset, output_file_path='../dataset/ae_t2v_dim{}_tSkill_dataset.pkl'.format(embedding_dim), mode='skill')
+    del preprocessed_dataset
+    dataset_t2v = dblp.load_ae_dataset(file_path='../dataset/ae_t2v_dim{}_tSkill_dataset.pkl'.format(embedding_dim))
+
+
 if dblp.preprocessed_dataset_exist() and dblp.train_test_indices_exist():
-    dblp.load_preprocessed_dataset()
+    dataset_onehot = dblp.load_preprocessed_dataset()
     train_test_indices = dblp.load_train_test_indices()
 else:
     if not dblp.ae_data_exist(file_path='../dataset/ae_dataset.pkl'):
         dblp.extract_data(filter_journals=True, skill_size_filter=min_skill_size, member_size_filter=min_member_size)
     if not dblp.preprocessed_dataset_exist() or not dblp.train_test_indices_exist():
         dblp.dataset_preprocessing(dblp.load_ae_dataset(file_path='../dataset/ae_dataset.pkl'), seed=seed, kfolds=k_fold, shuffle_at_the_end=True)
-    dblp.load_preprocessed_dataset()
+    dataset_onehot = dblp.load_preprocessed_dataset()
     train_test_indices = dblp.load_train_test_indices()
 
 # k_fold Cross Validation
@@ -100,23 +102,31 @@ r_at_k_overall_train = dblp_eval.init_eval_holder(evaluation_k_set)  # overall r
 r_at_k_all = dblp_eval.init_eval_holder(evaluation_k_set)  # all r@k of instances in one fold and one k_evaluation_set
 r_at_k_overall = dblp_eval.init_eval_holder(evaluation_k_set)  # overall r@k of instances in one fold and one k_evaluation_set
 
+lambda_val = 0.001  # Weight decay , refer : https://stackoverflow.com/questions/44495698/keras-difference-between-kernel-and-activity-regularizers
+
 time_str = time.strftime("%Y%m%d-%H%M%S")
 for fold_counter in range(1,k_fold+1):
-    x_train, y_train, x_test, y_test = dblp.get_fold_data(fold_counter, dataset, train_test_indices)
+    x_train_onehot, y_train_onehot, x_test_onehot, y_test_onehot = dblp.get_fold_data(fold_counter, dataset_onehot, train_test_indices)
+    x_train_t2v, y_train_t2v, x_test_t2v, y_test_t2v = dblp.get_fold_data(fold_counter, dataset_t2v, train_test_indices)
 
-    input_dim = x_train.shape[1]
-    output_dim = y_train.shape[1]
-    print("Input/output Dimensions:  ", input_dim, output_dim)
+    input_dim_onehot = x_train_onehot[0][0].shape[1]
+    input_dim_t2v = x_train_t2v.shape[1]
+    output_dim = y_train_onehot[0][0].shape[1]
+    print("Input/output Dimensions:  ", input_dim_onehot+input_dim_t2v, output_dim)
 
     # this is our input placeholder
     # network parameters
-    intermediate_dim_encoder = input_dim
+    intermediate_dim_encoder_onehot = input_dim_onehot
+    intermediate_dim_encoder_t2v = input_dim_t2v
     intermediate_dim_decoder = output_dim
 
     # VAE model = encoder + decoder
     # build encoder model
-    inputs = Input(shape=(input_dim,), name='encoder_input')
-    x = Dense(intermediate_dim_encoder, activation='relu')(inputs)
+    inputs_onehot = Input(shape=(input_dim_onehot,), name='encoder_input_onehot')
+    inputs_t2v = Input(shape=(input_dim_t2v,), name='encoder_input_t2v')
+    x_onehot = Dense(intermediate_dim_encoder_onehot, activation='relu')(inputs_onehot)
+    x_t2v = Dense(intermediate_dim_encoder_t2v, activation='relu')(inputs_t2v)
+    x = concatenate([x_onehot, x_t2v])
     z_mean = Dense(latent_dim, name='z_mean')(x)
     z_log_var = Dense(latent_dim, name='z_log_var')(x)
 
@@ -125,7 +135,7 @@ for fold_counter in range(1,k_fold+1):
     z = Lambda(sampling, output_shape=(latent_dim,), name='z')([z_mean, z_log_var])
 
     # instantiate encoder model
-    encoder = Model(inputs, [z_mean, z_log_var, z], name='encoder')
+    encoder = Model([inputs_onehot, inputs_t2v], [z_mean, z_log_var, z], name='encoder')
     encoder.summary()
     # plot_model(encoder, to_file='vae_mlp_encoder.png', show_shapes=True)
 
@@ -140,8 +150,8 @@ for fold_counter in range(1,k_fold+1):
     # plot_model(decoder, to_file='vae_mlp_decoder.png', show_shapes=True)
 
     # instantiate VAE model
-    outputs = decoder(encoder(inputs)[2])
-    autoencoder = Model(inputs, outputs, name='vae_mlp')
+    outputs = decoder(encoder([inputs_onehot, inputs_t2v])[2])
+    autoencoder = Model([inputs_onehot, inputs_t2v], outputs, name='vae_mlp')
 
     models = (encoder, decoder)
 
@@ -167,17 +177,33 @@ for fold_counter in range(1,k_fold+1):
 
     more_train_q = input('Train more? (y/n)')
     if more_train_q.lower() == 'y':
+        print('Starting with back propagation batch size {} for {} times each during {} overall epochs with training batch size {}. Total epochs={}.'
+            .format(back_propagation_batch_size,
+                    epochs_in_batch,
+                    epochs_overall,
+                    training_batch_size,
+                    epochs_overall * epochs_in_batch))
         # Training
-        autoencoder.fit(x_train, y_train,
-                        epochs=epochs,
-                        batch_size=back_propagation_batch_size,
-                        shuffle=True,
-                        verbose=2,
-                        validation_data=(x_test,y_test))
+        for epoch_overall in range(epochs_overall):
+            batch_counter = 1
+            for x_train_batch_onehot, y_train_batch_onehot, x_train_batch_t2v in zip(batch_generator(x_train_onehot, training_batch_size), batch_generator(y_train_onehot, training_batch_size), batch_generator_dense(x_train_t2v, training_batch_size)):
+                print('Overall Epoch: {} | Training batch {} of fold {}.'.format(epoch_overall + 1, batch_counter, fold_counter))
+                autoencoder.fit([x_train_batch_onehot, x_train_batch_t2v], y_train_batch_onehot,
+                                epochs=epochs_in_batch,
+                                batch_size=back_propagation_batch_size,
+                                shuffle=True,
+                                verbose=2,
+                                validation_data=(
+                                [np.asarray([x_test_record[0].todense() for x_test_record in x_test_onehot]).reshape(x_test_onehot.__len__(),-1), x_test_t2v],
+                                np.asarray([y_test_record[0].todense() for y_test_record in y_test_onehot]).reshape(y_test_onehot.__len__(),-1)))
+                batch_counter += 1
                 # Cool down GPU
                 # time.sleep(300)
 
-    score = autoencoder.evaluate(x_test, y_test, verbose=2)
+    score = autoencoder.evaluate(
+        [np.asarray([x_test_record[0].todense() for x_test_record in x_test_onehot]).reshape(x_test_onehot.__len__(), -1), x_test_t2v],
+        np.asarray([y_test_record[0].todense() for y_test_record in y_test_onehot]).reshape(y_test_onehot.__len__(), -1),
+        verbose=2)
     print('Test loss of fold {}: {}'.format(fold_counter, score))
     cvscores.append(score)
 
@@ -186,7 +212,7 @@ for fold_counter in range(1,k_fold+1):
     for k in evaluation_k_set:
         # r@k evaluation
         print("Evaluating r@k for top {} records in fold {}.".format(k, fold_counter))
-        r_at_k, r_at_k_array = dblp_eval.r_at_k(autoencoder.predict(x_train), y_train, k=k)
+        r_at_k, r_at_k_array = dblp_eval.r_at_k(autoencoder.predict([x_train_batch_onehot, x_train_batch_t2v]), y_train_batch_onehot, k=k)
         r_at_k_overall_train[k].append(r_at_k)
         r_at_k_all_train[k].append(r_at_k_array)
 
@@ -198,7 +224,9 @@ for fold_counter in range(1,k_fold+1):
     for k in evaluation_k_set:
         # r@k evaluation
         print("Evaluating r@k for top {} records in fold {}.".format(k, fold_counter))
-        r_at_k, r_at_k_array = dblp_eval.r_at_k(autoencoder.predict(x_test),y_test, k=k)
+        r_at_k, r_at_k_array = dblp_eval.r_at_k(autoencoder.predict(
+            [np.asarray([x_test_record[0].todense() for x_test_record in x_test_onehot]).reshape(x_test_onehot.__len__(), -1), x_test_t2v]),
+            np.asarray([y_test_record[0].todense() for y_test_record in y_test_onehot]).reshape(y_test_onehot.__len__(), -1), k=k)
         r_at_k_overall[k].append(r_at_k)
         r_at_k_all[k].append(r_at_k_array)
 
@@ -219,9 +247,10 @@ for fold_counter in range(1,k_fold+1):
     autoencoder.save_weights(
         "../output/Models/Weights/{}_{}_Time{}_Fold{}.h5".format(dataset_name, method_name, time_str, fold_counter))
 
-    with open('../output/Models/{}_{}_Time{}_EncodingDim{}_Fold{}_Loss{}_Epoch{}_kFold{}_BatchBP{}_BatchTraining{}.txt'
-                    .format(dataset_name, method_name, time_str, embedding_dim, fold_counter, int(score * 1000),
-                            epochs, k_fold, back_propagation_batch_size, training_batch_size), 'w') as f:
+    with open('../output/Models/{}_{}_Time{}_EncodingDim{}_Fold{}_Loss{}_Epoch{}(overall{}xinner{})_kFold{}_BatchBP{}_BatchTraining{}.txt'
+                    .format(dataset_name, method_name, time_str, latent_dim, fold_counter, int(score * 1000),
+                            epochs_in_batch * epochs_overall, epochs_in_batch, epochs_overall,
+                            k_fold, back_propagation_batch_size, training_batch_size), 'w') as f:
         with redirect_stdout(f):
             autoencoder.summary()
 
@@ -250,6 +279,5 @@ print('Loss for each fold: {}'.format(cvscores))
 
 compare_submit = input('Submit for compare? (y/n)')
 if compare_submit.lower() == 'y':
-    with open('../misc/{}_dim{}_r_at_k_50.pkl'.format(method_name, embedding_dim), 'wb') as f:
-
+    with open('../misc/{}_r_at_k_50.pkl'.format(method_name), 'wb') as f:
         pkl.dump(r_at_k_overall, f)
