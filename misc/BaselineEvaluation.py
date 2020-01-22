@@ -3,6 +3,7 @@ from dal.load_dblp_data import *
 from cmn.utils import crossValidate
 import eval.evaluator as dblp_eval
 from eval import plotter
+import ml_metrics as metrics
 
 seed = 7
 np.random.seed(seed)
@@ -61,6 +62,24 @@ def calc_r_at_k(prediction, true):
         all_recall.append(recall/t.__len__())
     return np.mean(all_recall), all_recall
 
+def find_indices(prediction ,true):
+    preds = []
+    trues = []
+    for pred, t in zip(prediction, true):
+        t = np.asarray(t)
+        pred = np.asarray(pred)
+        t_indices = np.argwhere(t)
+        if t_indices.__len__() == 0:
+            continue
+        pred_indices = pred.argsort()[:][::-1] #sorting checkup
+        pred_indices = list(pred_indices)
+        for i in pred_indices:
+            if i not in np.argwhere(pred):
+                pred_indices.remove(i)
+        preds.append(pred_indices)
+        trues.append([int(t) for t in t_indices])
+    return preds, trues
+
 
 authorNameIds = pandas.read_csv('./baselineOutputs/authorNameId.txt', encoding='utf_8', header=None, delimiter='	', names=["NameID", "Author"])
 with open('./baselineOutputs/test_authors.csv', 'r') as f:
@@ -72,6 +91,7 @@ with open('./baselineOutputs/test_authors.csv', 'r') as f:
             diff = k - authors.__len__()
             authors += ['-1'] * diff
         predictions.append(authors)
+predictions_list = predictions.copy()
 predictions = np.asarray(predictions)
 
 y_test = []
@@ -86,15 +106,21 @@ for testIndex in testIndices:
             authorIDs = sample[2].nonzero()[1]
             y_test.append(authorNames_true[authorIDs])
             continue
+y_test_list = [list(y) for y in y_test]
 y_test = np.asarray(y_test)
 
 k_set = np.arange(1, k+1, 1)
 r_at_k = dblp_eval.init_eval_holder(k_set) # all r@k of instances in one fold and one k_evaluation_set
+mapk = dblp_eval.init_eval_holder(k_set) # all r@k of instances in one fold and one k_evaluation_set
 for target_k in k_set:
     all_recall_mean, all_recall = calc_r_at_k(predictions[:, :target_k], y_test)
     r_at_k[target_k] = all_recall_mean
+    mapk[target_k] = metrics.mapk(y_test_list, predictions_list, k=target_k)
 
 plotter.plot_at_k(k_set, r_at_k, 'Recall@k')
 
-with open('./Baseline_r_at_k_50.pkl', 'wb') as f:
+with open('./Baseline_2009_r_at_k_50.pkl', 'wb') as f:
     pkl.dump(r_at_k, f)
+
+with open('./Baseline_2009_mapk_50.pkl', 'wb') as f:
+    pkl.dump(mapk, f)

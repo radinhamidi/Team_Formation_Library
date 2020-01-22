@@ -14,6 +14,7 @@ from cmn.utils import *
 import dal.load_dblp_data as dblp
 import eval.evaluator as dblp_eval
 from ml.nn_custom_func import *
+import ml_metrics as metrics
 
 # fix random seed for reproducibility
 seed = 7
@@ -25,11 +26,11 @@ method_name = 'T2V_skill_VAE'
 
 #eval settings
 k_fold = 10
-k_max = 50 #cut_off for recall
+k_max = 50 #cut_off for eval
 evaluation_k_set = np.arange(1, k_max+1, 1)
 
 #nn settings
-epochs = 300
+epochs = 3
 back_propagation_batch_size = 64
 training_batch_size = 6000
 min_skill_size = 0
@@ -95,10 +96,12 @@ cvscores = []
 # Defining evaluation scores holders for train data
 r_at_k_all_train = dblp_eval.init_eval_holder(evaluation_k_set)  # all r@k of instances in one fold and one k_evaluation_set
 r_at_k_overall_train = dblp_eval.init_eval_holder(evaluation_k_set)  # overall r@k of instances in one fold and one k_evaluation_set
+mapk_train = dblp_eval.init_eval_holder(evaluation_k_set)  # all r@k of instances in one fold and one k_evaluation_set
 
 # Defining evaluation scores holders for test data
 r_at_k_all = dblp_eval.init_eval_holder(evaluation_k_set)  # all r@k of instances in one fold and one k_evaluation_set
 r_at_k_overall = dblp_eval.init_eval_holder(evaluation_k_set)  # overall r@k of instances in one fold and one k_evaluation_set
+mapk = dblp_eval.init_eval_holder(evaluation_k_set)  # all r@k of instances in one fold and one k_evaluation_set
 
 time_str = time.strftime("%Y%m%d-%H%M%S")
 for fold_counter in range(1,k_fold+1):
@@ -183,27 +186,33 @@ for fold_counter in range(1,k_fold+1):
 
     # @k evaluation process for last train batch data
     print("eval on last batch of train data.")
+    prediction_train = autoencoder.predict(x_train)
+    pred_indices, true_indices = dblp_eval.find_indices(prediction_train, y_train)
     for k in evaluation_k_set:
         # r@k evaluation
-        print("Evaluating r@k for top {} records in fold {}.".format(k, fold_counter))
-        r_at_k, r_at_k_array = dblp_eval.r_at_k(autoencoder.predict(x_train), y_train, k=k)
+        print("Evaluating map@k and r@k for top {} records in fold {}.".format(k, fold_counter))
+        r_at_k, r_at_k_array = dblp_eval.r_at_k(prediction_train, y_train, k=k)
         r_at_k_overall_train[k].append(r_at_k)
         r_at_k_all_train[k].append(r_at_k_array)
+        mapk_train[k].append(metrics.mapk(true_indices, pred_indices, k=k))
 
-        # print("For top {} in Train data:\nP@{}:{}\nR@{}:{}".format(k, k, p_at_k, k, r_at_k))
         print("For top {} in train data: R@{}:{}".format(k, k, r_at_k))
+        print("For top {} in train data: MAP@{}:{}".format(k, k, mapk_train[k][-1]))
 
     # @k evaluation process for test data
     print("eval on test data.")
+    prediction_test = autoencoder.predict(x_test)
+    pred_indices, true_indices = dblp_eval.find_indices(prediction_test, y_test)
     for k in evaluation_k_set:
         # r@k evaluation
-        print("Evaluating r@k for top {} records in fold {}.".format(k, fold_counter))
-        r_at_k, r_at_k_array = dblp_eval.r_at_k(autoencoder.predict(x_test),y_test, k=k)
+        print("Evaluating map@k and r@k for top {} records in fold {}.".format(k, fold_counter))
+        r_at_k, r_at_k_array = dblp_eval.r_at_k(prediction_test,y_test, k=k)
         r_at_k_overall[k].append(r_at_k)
         r_at_k_all[k].append(r_at_k_array)
+        mapk[k].append(metrics.mapk(true_indices, pred_indices, k=k))
 
-        # print("For top {} in Test data:\nP@{}:{}\nR@{}:{}".format(k, k, p_at_k, k, r_at_k))
         print("For top {} in test data: R@{}:{}".format(k, k, r_at_k))
+        print("For top {} in test data: MAP@{}:{}".format(k, k, mapk[k][-1]))
 
 
     # saving model
@@ -237,9 +246,11 @@ for fold_counter in range(1,k_fold+1):
     # Saving evaluation data
     cmn.utils.save_record(r_at_k_all_train, '{}_{}_r@k_all_train_Time{}'.format(dataset_name, method_name, time_str))
     cmn.utils.save_record(r_at_k_overall_train, '{}_{}_r@k_train_Time{}'.format(dataset_name, method_name, time_str))
+    cmn.utils.save_record(mapk_train, '{}_{}_mapk_train_Time{}'.format(dataset_name, method_name, time_str))
 
     cmn.utils.save_record(r_at_k_all, '{}_{}_r@k_all_Time{}'.format(dataset_name, method_name, time_str))
     cmn.utils.save_record(r_at_k_overall, '{}_{}_r@k_Time{}'.format(dataset_name, method_name, time_str))
+    cmn.utils.save_record(mapk, '{}_{}_mapk_Time{}'.format(dataset_name, method_name, time_str))
 
     print('eval records are saved successfully for fold #{}'.format(fold_counter))
 
@@ -251,5 +262,6 @@ print('Loss for each fold: {}'.format(cvscores))
 compare_submit = input('Submit for compare? (y/n)')
 if compare_submit.lower() == 'y':
     with open('../misc/{}_dim{}_r_at_k_50.pkl'.format(method_name, embedding_dim), 'wb') as f:
-
         pkl.dump(r_at_k_overall, f)
+    with open('../misc/{}_dim{}_mapk_50.pkl'.format(method_name, embedding_dim), 'wb') as f:
+        pkl.dump(mapk, f)
