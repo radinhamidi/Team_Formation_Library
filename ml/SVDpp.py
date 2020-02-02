@@ -89,7 +89,7 @@ predictions = algo.test(data_test)
 r_at_k = dblp_eval.init_eval_holder(evaluation_k_set)  # all r@k of instances in one fold and one k_evaluation_set
 p_at_k = dblp_eval.init_eval_holder(evaluation_k_set)  # all r@k of instances in one fold and one k_evaluation_set
 for k in evaluation_k_set:
-    precisions, recalls = precision_recall_at_k(predictions, k=50, threshold=0.5)
+    precisions, recalls = precision_recall_at_k(predictions, k=k, threshold=0.5)
     rak = np.mean(list(recalls.values()))
     pak = np.mean(list(precisions.values()))
     r_at_k[k].append(rak)
