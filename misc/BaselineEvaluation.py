@@ -2,12 +2,16 @@ import pickle as pkl
 from dal.load_dblp_data import *
 from cmn.utils import crossValidate
 import eval.evaluator as dblp_eval
+import eval.ranking as rk
 from eval import plotter
 import ml_metrics as metrics
 
 seed = 7
 np.random.seed(seed)
 k = 50
+year = 2009
+# year = 2017
+
 
 # fax = './x_sampleset.pkl'
 # fay = './y_sampleset.pkl'
@@ -73,16 +77,14 @@ def find_indices(prediction ,true):
             continue
         pred_indices = pred.argsort()[:][::-1] #sorting checkup
         pred_indices = list(pred_indices)
-        for i in pred_indices:
-            if i not in np.argwhere(pred):
-                pred_indices.remove(i)
+        pred_indices = [i for i in pred_indices if i in np.argwhere(pred)]
         preds.append(pred_indices)
         trues.append([int(t) for t in t_indices])
     return preds, trues
 
 
-authorNameIds = pandas.read_csv('./baselineOutputs/authorNameId.txt', encoding='utf_8', header=None, delimiter='	', names=["NameID", "Author"])
-with open('./baselineOutputs/test_authors.csv', 'r') as f:
+authorNameIds = pandas.read_csv('./baselineOutputs/authorNameId_{}.txt'.format(year), encoding='utf_8', header=None, delimiter='	', names=["NameID", "Author"])
+with open('./baselineOutputs/test_authors_{}.csv'.format(year), 'r') as f:
     predictions = []
     lines = f.readlines()
     for line in lines:
@@ -112,15 +114,27 @@ y_test = np.asarray(y_test)
 k_set = np.arange(1, k+1, 1)
 r_at_k = dblp_eval.init_eval_holder(k_set) # all r@k of instances in one fold and one k_evaluation_set
 mapk = dblp_eval.init_eval_holder(k_set) # all r@k of instances in one fold and one k_evaluation_set
+ndcg = dblp_eval.init_eval_holder(k_set) # all r@k of instances in one fold and one k_evaluation_set
+mrr = dblp_eval.init_eval_holder(k_set) # all r@k of instances in one fold and one k_evaluation_set
 for target_k in k_set:
     all_recall_mean, all_recall = calc_r_at_k(predictions[:, :target_k], y_test)
     r_at_k[target_k] = all_recall_mean
     mapk[target_k] = metrics.mapk(y_test_list, predictions_list, k=target_k)
-
+    ndcg[target_k] = rk.ndcg_at(predictions_list, y_test_list, k=k)
+mrr[target_k] = dblp_eval.mean_reciprocal_rank(dblp_eval.cal_relevance_score(predictions_list, y_test_list))
 plotter.plot_at_k(k_set, r_at_k, 'Recall@k')
 
-with open('./Baseline_2009_r_at_k_50.pkl', 'wb') as f:
+
+
+with open('./Baseline_{}_r_at_k_50.pkl'.format(year), 'wb') as f:
     pkl.dump(r_at_k, f)
 
-with open('./Baseline_2009_mapk_50.pkl', 'wb') as f:
+with open('./Baseline_{}_mapk_50.pkl'.format(year), 'wb') as f:
     pkl.dump(mapk, f)
+
+with open('./Baseline_{}_ndcg_50.pkl'.format(year), 'wb') as f:
+    pkl.dump(ndcg, f)
+
+with open('./Baseline_{}_mrr_50.pkl'.format(year), 'wb') as f:
+    pkl.dump(mrr, f)
+

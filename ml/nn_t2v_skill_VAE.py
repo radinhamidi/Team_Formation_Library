@@ -13,6 +13,7 @@ import cmn.utils
 from cmn.utils import *
 import dal.load_dblp_data as dblp
 import eval.evaluator as dblp_eval
+import eval.ranking as rk
 from ml.nn_custom_func import *
 import ml_metrics as metrics
 
@@ -30,12 +31,12 @@ k_max = 50 #cut_off for eval
 evaluation_k_set = np.arange(1, k_max+1, 1)
 
 #nn settings
-epochs = 3
+epochs = 150
 back_propagation_batch_size = 64
 training_batch_size = 6000
 min_skill_size = 0
 min_member_size = 0
-latent_dim = 50
+latent_dim = 100
 
 print(K.tensorflow_backend._get_available_gpus())
 
@@ -80,7 +81,6 @@ def sampling(args):
 
 
 if dblp.preprocessed_dataset_exist() and dblp.train_test_indices_exist():
-    dblp.load_preprocessed_dataset()
     train_test_indices = dblp.load_train_test_indices()
 else:
     if not dblp.ae_data_exist(file_path='../dataset/ae_dataset.pkl'):
@@ -102,6 +102,8 @@ mapk_train = dblp_eval.init_eval_holder(evaluation_k_set)  # all r@k of instance
 r_at_k_all = dblp_eval.init_eval_holder(evaluation_k_set)  # all r@k of instances in one fold and one k_evaluation_set
 r_at_k_overall = dblp_eval.init_eval_holder(evaluation_k_set)  # overall r@k of instances in one fold and one k_evaluation_set
 mapk = dblp_eval.init_eval_holder(evaluation_k_set)  # all r@k of instances in one fold and one k_evaluation_set
+ndcg = dblp_eval.init_eval_holder(evaluation_k_set)  # all r@k of instances in one fold and one k_evaluation_set
+mrr = dblp_eval.init_eval_holder(evaluation_k_set)  # all r@k of instances in one fold and one k_evaluation_set
 
 time_str = time.strftime("%Y%m%d-%H%M%S")
 for fold_counter in range(1,k_fold+1):
@@ -210,9 +212,12 @@ for fold_counter in range(1,k_fold+1):
         r_at_k_overall[k].append(r_at_k)
         r_at_k_all[k].append(r_at_k_array)
         mapk[k].append(metrics.mapk(true_indices, pred_indices, k=k))
-
+        ndcg[k].append(rk.ndcg_at(pred_indices, true_indices, k=k))
         print("For top {} in test data: R@{}:{}".format(k, k, r_at_k))
         print("For top {} in test data: MAP@{}:{}".format(k, k, mapk[k][-1]))
+        print("For top {} in test data: NDCG@{}:{}".format(k, k, ndcg[k][-1]))
+    mrr[k].append(dblp_eval.mean_reciprocal_rank(dblp_eval.cal_relevance_score(pred_indices, true_indices)))
+    print("For top {} in test data: MRR@{}:{}".format(k, k, mrr[k][-1]))
 
 
     # saving model
@@ -265,3 +270,7 @@ if compare_submit.lower() == 'y':
         pkl.dump(r_at_k_overall, f)
     with open('../misc/{}_dim{}_mapk_50.pkl'.format(method_name, embedding_dim), 'wb') as f:
         pkl.dump(mapk, f)
+    with open('../misc/{}_dim{}_ndcg_50.pkl'.format(method_name, embedding_dim), 'wb') as f:
+        pkl.dump(ndcg, f)
+    with open('../misc/{}_dim{}_mrr_50.pkl'.format(method_name, embedding_dim), 'wb') as f:
+        pkl.dump(mrr, f)

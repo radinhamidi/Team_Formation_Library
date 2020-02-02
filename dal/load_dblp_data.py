@@ -8,7 +8,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from nltk.tokenize import word_tokenize, RegexpTokenizer
 from nltk.stem.porter import PorterStemmer
 from nltk.corpus import stopwords
-
+import pandas as pd
 from ml.team2vec import *
 
 publication_filter = ['sigmod', 'vldb', 'icde', 'icdt', 'edbt', 'pods', 'kdd', 'www',
@@ -516,3 +516,19 @@ def load_preprocessed_dataset(file_path='../dataset/dblp_preprocessed_dataset.pk
     with open(file_path, 'rb') as f:
         dataset = pickle.load(f)
     return dataset
+
+
+def create_user_item(x, y):
+    itemID = []
+    userID = []
+    rating = []
+    for skills, users in zip(x, y):
+        skills_ids = list(skills.all().nonzero()[1])
+        users_ids = list(users.all().nonzero()[1])
+        for skill in skills_ids:
+            for user in users_ids:
+                itemID.append(skill)
+                userID.append(user)
+                rating.append(1)
+    df = pd.DataFrame({'itemID': itemID, 'userID': userID, 'rating': rating})
+    return df
