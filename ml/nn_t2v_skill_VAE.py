@@ -4,7 +4,10 @@ from __future__ import print_function
 from keras.layers import Lambda
 from keras.losses import mse, binary_crossentropy, mae, kld, categorical_crossentropy
 import time
+import csv
 import pickle as pkl
+from keras.callbacks import EarlyStopping
+from keras_metrics.metrics import true_negative
 import cmn.utils
 from keras.layers import Input, Dense
 from keras.models import Model
@@ -14,31 +17,32 @@ from cmn.utils import *
 import dal.load_dblp_data as dblp
 import eval.evaluator as dblp_eval
 import eval.ranking as rk
-from ml.nn_custom_func import *
 import ml_metrics as metrics
+from cmn.variational import *
 
 # fix random seed for reproducibility
 seed = 7
 np.random.seed(seed)
+es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=15, min_delta=1)
 
 #running settings
 dataset_name = 'DBLP'
-method_name = 'T2V_skill_VAE'
+method_name = 'S_VAE_O'
 
 #eval settings
 k_fold = 10
-k_max = 50 #cut_off for eval
+k_max = 100 #cut_off for eval
 evaluation_k_set = np.arange(1, k_max+1, 1)
 
 #nn settings
-epochs = 150
+epochs = 300
 back_propagation_batch_size = 64
 training_batch_size = 6000
 min_skill_size = 0
 min_member_size = 0
-latent_dim = 100
+latent_dim = 2
 
-print(K.tensorflow_backend._get_available_gpus())
+print(tf.test.is_gpu_available())
 
 t2v_model = Team2Vec()
 t2v_model = load_T2V_model(t2v_model)
@@ -104,8 +108,19 @@ r_at_k_overall = dblp_eval.init_eval_holder(evaluation_k_set)  # overall r@k of 
 mapk = dblp_eval.init_eval_holder(evaluation_k_set)  # all r@k of instances in one fold and one k_evaluation_set
 ndcg = dblp_eval.init_eval_holder(evaluation_k_set)  # all r@k of instances in one fold and one k_evaluation_set
 mrr = dblp_eval.init_eval_holder(evaluation_k_set)  # all r@k of instances in one fold and one k_evaluation_set
+tf_score = dblp_eval.init_eval_holder(evaluation_k_set)  # all r@k of instances in one fold and one k_evaluation_set
 
-time_str = time.strftime("%Y%m%d-%H%M%S")
+load_weights_from_file_q = input('Load weights from file? (y/n)')
+more_train_q = input('Train more? (y/n)')
+
+time_str = time.strftime("%Y_%m_%d-%H_%M_%S")
+result_output_name = "../output/predictions/{}_{}.csv".format(method_name, time_str)
+with open(result_output_name, 'w') as file:
+    writer = csv.writer(file)
+    writer.writerow(
+        ['Method Name', '# Total Folds', '# Fold Number', '# Predictions', '# Truth', 'Computation Time (ms)',
+         'Prediction Indices', 'True Indices'])
+
 for fold_counter in range(1,k_fold+1):
     x_train, y_train, x_test, y_test = dblp.get_fold_data(fold_counter, dataset, train_test_indices)
 
@@ -120,6 +135,7 @@ for fold_counter in range(1,k_fold+1):
 
     # VAE model = encoder + decoder
     # build encoder model
+
     inputs = Input(shape=(input_dim,), name='encoder_input')
     x = Dense(intermediate_dim_encoder, activation='relu')(inputs)
     z_mean = Dense(latent_dim, name='z_mean')(x)
@@ -164,18 +180,17 @@ for fold_counter in range(1,k_fold+1):
     # autoencoder.compile(optimizer='adagrad', loss='cross_entropy')
 
     # Loading model weights
-    load_weights_from_file_q = input('Load weights from file? (y/n)')
     if load_weights_from_file_q.lower() == 'y':
         pick_model_weights(autoencoder, dataset_name=dataset_name)
     # x_train = x_train.astype('float32')
     # x_test = x_test.astype('float32')
 
-    more_train_q = input('Train more? (y/n)')
     if more_train_q.lower() == 'y':
         # Training
         autoencoder.fit(x_train, y_train,
                         epochs=epochs,
                         batch_size=back_propagation_batch_size,
+                        callbacks=[es],
                         shuffle=True,
                         verbose=2,
                         validation_data=(x_test,y_test))
@@ -186,39 +201,56 @@ for fold_counter in range(1,k_fold+1):
     print('Test loss of fold {}: {}'.format(fold_counter, score))
     cvscores.append(score)
 
-    # @k evaluation process for last train batch data
-    print("eval on last batch of train data.")
-    prediction_train = autoencoder.predict(x_train)
-    pred_indices, true_indices = dblp_eval.find_indices(prediction_train, y_train)
-    for k in evaluation_k_set:
-        # r@k evaluation
-        print("Evaluating map@k and r@k for top {} records in fold {}.".format(k, fold_counter))
-        r_at_k, r_at_k_array = dblp_eval.r_at_k(prediction_train, y_train, k=k)
-        r_at_k_overall_train[k].append(r_at_k)
-        r_at_k_all_train[k].append(r_at_k_array)
-        mapk_train[k].append(metrics.mapk(true_indices, pred_indices, k=k))
-
-        print("For top {} in train data: R@{}:{}".format(k, k, r_at_k))
-        print("For top {} in train data: MAP@{}:{}".format(k, k, mapk_train[k][-1]))
+    # # @k evaluation process for last train batch data
+    # print("eval on last batch of train data.")
+    # prediction_train = autoencoder.predict(x_train)
+    # pred_indices, true_indices = dblp_eval.find_indices(prediction_train, y_train)
+    # for k in evaluation_k_set:
+    #     # r@k evaluation
+    #     print("Evaluating map@k and r@k for top {} records in fold {}.".format(k, fold_counter))
+    #     r_at_k, r_at_k_array = dblp_eval.r_at_k(prediction_train, y_train, k=k)
+    #     r_at_k_overall_train[k].append(r_at_k)
+    #     r_at_k_all_train[k].append(r_at_k_array)
+    #     mapk_train[k].append(metrics.mapk(true_indices, pred_indices, k=k))
+    #
+    #     print("For top {} in train data: R@{}:{}".format(k, k, r_at_k))
+    #     print("For top {} in train data: MAP@{}:{}".format(k, k, mapk_train[k][-1]))
 
     # @k evaluation process for test data
-    print("eval on test data.")
-    prediction_test = autoencoder.predict(x_test)
-    pred_indices, true_indices = dblp_eval.find_indices(prediction_test, y_test)
-    for k in evaluation_k_set:
-        # r@k evaluation
-        print("Evaluating map@k and r@k for top {} records in fold {}.".format(k, fold_counter))
-        r_at_k, r_at_k_array = dblp_eval.r_at_k(prediction_test,y_test, k=k)
-        r_at_k_overall[k].append(r_at_k)
-        r_at_k_all[k].append(r_at_k_array)
-        mapk[k].append(metrics.mapk(true_indices, pred_indices, k=k))
-        ndcg[k].append(rk.ndcg_at(pred_indices, true_indices, k=k))
-        print("For top {} in test data: R@{}:{}".format(k, k, r_at_k))
-        print("For top {} in test data: MAP@{}:{}".format(k, k, mapk[k][-1]))
-        print("For top {} in test data: NDCG@{}:{}".format(k, k, ndcg[k][-1]))
-    mrr[k].append(dblp_eval.mean_reciprocal_rank(dblp_eval.cal_relevance_score(pred_indices, true_indices)))
-    print("For top {} in test data: MRR@{}:{}".format(k, k, mrr[k][-1]))
+    print("eval on test data fold #{}".format(fold_counter))
+    true_indices = []
+    pred_indices = []
+    with open(result_output_name, 'a+') as file:
+        writer = csv.writer(file)
+        for sample_x, sample_y in zip(x_test, y_test):
+            start_time = time.time()
+            sample_prediction = autoencoder.predict(np.asmatrix(sample_x))
+            end_time = time.time()
+            elapsed_time = (end_time - start_time)*1000
+            pred_index, true_index = dblp_eval.find_indices(sample_prediction, [sample_y])
+            true_indices.append(true_index[0])
+            pred_indices.append(pred_index[0])
+            writer.writerow([method_name, k_fold, fold_counter, len(pred_index[0][:k_max]), len(true_index[0]),
+                             elapsed_time] + pred_index[0][:k_max] + true_index[0])
 
+
+    # # prediction_test = autoencoder.predict(x_test)
+    # user_skill_dict = dblp.get_user_skill_dict(dblp.load_preprocessed_dataset())
+    # for k in evaluation_k_set:
+    #     # r@k evaluation
+    #     print("Evaluating for top {} records in fold {}.".format(k, fold_counter))
+    #     r_at_k, r_at_k_array = dblp_eval.r_at_k(pred_indices, true_indices, k=k)
+    #     r_at_k_overall[k].append(r_at_k)
+    #     r_at_k_all[k].append(r_at_k_array)
+    #     print("For top {} in test data: R@{}:{}".format(k, k, r_at_k))
+    #     mapk[k].append(metrics.mapk(true_indices, pred_indices, k=k))
+    #     print("For top {} in test data: MAP@{}:{}".format(k, k, mapk[k][-1]))
+    #     ndcg[k].append(rk.ndcg_at(pred_indices, true_indices, k=k))
+    #     print("For top {} in test data: NDCG@{}:{}".format(k, k, ndcg[k][-1]))
+    #     mrr[k].append(dblp_eval.mean_reciprocal_rank(dblp_eval.cal_relevance_score(pred_indices[:k], true_indices)))
+    #     print("For top {} in test data: MRR@{}:{}".format(k, k, mrr[k][-1]))
+    #     tf_score[k].append(dblp_eval.team_formation_feasiblity(pred_indices, true_indices, user_skill_dict, k))
+    #     print("For top {} in test data: TF Score@{}:{}".format(k, k, tf_score[k][-1]))
 
     # saving model
     # save_model_q = input('Save the models? (y/n)')
@@ -249,28 +281,31 @@ for fold_counter in range(1,k_fold+1):
     K.clear_session()
 
     # Saving evaluation data
-    cmn.utils.save_record(r_at_k_all_train, '{}_{}_r@k_all_train_Time{}'.format(dataset_name, method_name, time_str))
-    cmn.utils.save_record(r_at_k_overall_train, '{}_{}_r@k_train_Time{}'.format(dataset_name, method_name, time_str))
-    cmn.utils.save_record(mapk_train, '{}_{}_mapk_train_Time{}'.format(dataset_name, method_name, time_str))
-
-    cmn.utils.save_record(r_at_k_all, '{}_{}_r@k_all_Time{}'.format(dataset_name, method_name, time_str))
-    cmn.utils.save_record(r_at_k_overall, '{}_{}_r@k_Time{}'.format(dataset_name, method_name, time_str))
-    cmn.utils.save_record(mapk, '{}_{}_mapk_Time{}'.format(dataset_name, method_name, time_str))
-
-    print('eval records are saved successfully for fold #{}'.format(fold_counter))
+    # cmn.utils.save_record(r_at_k_all_train, '{}_{}_r@k_all_train_Time{}'.format(dataset_name, method_name, time_str))
+    # cmn.utils.save_record(r_at_k_overall_train, '{}_{}_r@k_train_Time{}'.format(dataset_name, method_name, time_str))
+    # cmn.utils.save_record(mapk_train, '{}_{}_mapk_train_Time{}'.format(dataset_name, method_name, time_str))
+    #
+    # cmn.utils.save_record(r_at_k_all, '{}_{}_r@k_all_Time{}'.format(dataset_name, method_name, time_str))
+    # cmn.utils.save_record(r_at_k_overall, '{}_{}_r@k_Time{}'.format(dataset_name, method_name, time_str))
+    # cmn.utils.save_record(mapk, '{}_{}_mapk_Time{}'.format(dataset_name, method_name, time_str))
+    # print('eval records are saved successfully for fold #{}'.format(fold_counter))
 
     fold_counter += 1
-    break
+    # break
 
 print('Loss for each fold: {}'.format(cvscores))
 
-compare_submit = input('Submit for compare? (y/n)')
-if compare_submit.lower() == 'y':
-    with open('../misc/{}_dim{}_r_at_k_50.pkl'.format(method_name, embedding_dim), 'wb') as f:
-        pkl.dump(r_at_k_overall, f)
-    with open('../misc/{}_dim{}_mapk_50.pkl'.format(method_name, embedding_dim), 'wb') as f:
-        pkl.dump(mapk, f)
-    with open('../misc/{}_dim{}_ndcg_50.pkl'.format(method_name, embedding_dim), 'wb') as f:
-        pkl.dump(ndcg, f)
-    with open('../misc/{}_dim{}_mrr_50.pkl'.format(method_name, embedding_dim), 'wb') as f:
-        pkl.dump(mrr, f)
+# compare_submit = input('Submit for compare? (y/n)')
+# if compare_submit.lower() == 'y':
+#     with open('../misc/{}_dim{}_r_at_k_50.pkl'.format(method_name, embedding_dim), 'wb') as f:
+#         pkl.dump(r_at_k_overall, f)
+#     with open('../misc/{}_dim{}_r_at_k_all_50.pkl'.format(method_name, embedding_dim), 'wb') as f:
+#         pkl.dump(r_at_k_all, f)
+#     with open('../misc/{}_dim{}_mapk_50.pkl'.format(method_name, embedding_dim), 'wb') as f:
+#         pkl.dump(mapk, f)
+#     with open('../misc/{}_dim{}_ndcg_50.pkl'.format(method_name, embedding_dim), 'wb') as f:
+#         pkl.dump(ndcg, f)
+#     with open('../misc/{}_dim{}_mrr_50.pkl'.format(method_name, embedding_dim), 'wb') as f:
+#         pkl.dump(mrr, f)
+#     with open('../misc/{}_dim{}_tf_50.pkl'.format(method_name, embedding_dim), 'wb') as f:
+#         pkl.dump(tf_score, f)

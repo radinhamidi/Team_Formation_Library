@@ -10,6 +10,9 @@ from nltk.stem.porter import PorterStemmer
 from nltk.corpus import stopwords
 import pandas as pd
 from ml.team2vec import *
+import matplotlib.pyplot as plt
+import xlwt
+from tempfile import TemporaryFile
 
 publication_filter = ['sigmod', 'vldb', 'icde', 'icdt', 'edbt', 'pods', 'kdd', 'www',
                       'sdm', 'pkdd', 'icdm', 'cikm', 'aaai', 'icml', 'ecml', 'colt',
@@ -143,6 +146,17 @@ def load_authors(dir):
     authors = authorNameIds_sorted.iloc[:, 1]
     return authors.values, nameIDs.values
 
+def get_user_skill_dict(data):
+    dict = {}
+    for sample in data:
+        id = sample[0]
+        skill = sample[1].nonzero()[1]
+        user = sample[2].nonzero()[1]
+        for u in user:
+            if u not in dict.keys():
+                dict[u] = []
+            dict[u].extend(skill)
+    return dict
 
 def convert_to_pkl(txt_dir='../dataset/dblp.txt', pkl_dir='../dataset/dblp.pkl', ftype='dict'):
     load_dblp_arnet(txt_dir, pkl_dir, ftype=ftype)
@@ -410,47 +424,57 @@ def dataset_preprocessing(dataset, min_records=10, kfolds=10, max_features=2000,
 
 def split_data(kfolds, author_docID_dict, eligible_documents, shuffle_at_the_end, save_to_pkl, save_to_csv,
                indices_dict_file_path, baseline_path):
-    train_docs = []
-    test_docs = []
-    rule_violence_counter = 0
-    for author in author_docID_dict.keys():
-        list_of_author_docs = author_docID_dict.get(author)
-        list_of_author_docs = [docID for docID in list_of_author_docs if docID in eligible_documents]
 
-        number_of_test_docs = np.ceil((1 / kfolds) * len(list_of_author_docs))
+    indices = {}
+    for fold_counter in range(1,kfolds+1):
+        train_docs = []
+        test_docs = []
+        rule_violence_counter = 0
 
-        already_in_test = []
-        for doc in list_of_author_docs:
-            if doc in test_docs:
-                already_in_test.append(doc)
+        for ex_folds in range(1, fold_counter):
+            train_docs.append(indices[ex_folds]['Train'])
 
-        number_of_moving_to_test = int(number_of_test_docs - len(already_in_test))
+        for author in author_docID_dict.keys():
+            list_of_author_docs = author_docID_dict.get(author)
+            list_of_author_docs = [docID for docID in list_of_author_docs if docID in eligible_documents]
 
-        if number_of_moving_to_test <= 0:
-            rule_violence_counter += 1
+            number_of_test_docs = np.ceil((1 / kfolds) * len(list_of_author_docs))
 
-        elif number_of_moving_to_test > 0:
-            eligible_samples_for_test_set = [doc for doc in list_of_author_docs if
-                                             doc not in already_in_test and doc not in train_docs]
-            if len(eligible_samples_for_test_set) > 0:
-                if len(eligible_samples_for_test_set) > number_of_moving_to_test:
-                    test_docs.extend(random.sample(eligible_samples_for_test_set, k=number_of_moving_to_test))
-                else:
-                    test_docs.extend(eligible_samples_for_test_set)
+            already_in_test = []
+            for doc in list_of_author_docs:
+                if doc in test_docs:
+                    already_in_test.append(doc)
 
-        train_docs.extend([ele for ele in list_of_author_docs if ele not in test_docs and ele not in train_docs])
+            number_of_moving_to_test = int(number_of_test_docs - len(already_in_test))
 
-    print("Number of Train docs: {}".format(len(train_docs)))
-    print("Number of Test docs: {}".format(len(test_docs)))
-    print("Number of violations in train/test split because of already"
-          " existence of a paper from target author in test set: {}".format(rule_violence_counter))
+            if number_of_moving_to_test <= 0:
+                rule_violence_counter += 1
 
-    if shuffle_at_the_end:
-        random.shuffle(train_docs)
-        random.shuffle(test_docs)
+            elif number_of_moving_to_test > 0:
+                eligible_samples_for_test_set = [doc for doc in list_of_author_docs if
+                                                 doc not in already_in_test and doc not in train_docs]
+                if len(eligible_samples_for_test_set) > 0:
+                    if len(eligible_samples_for_test_set) > number_of_moving_to_test:
+                        test_docs.extend(random.sample(eligible_samples_for_test_set, k=number_of_moving_to_test))
+                    else:
+                        test_docs.extend(eligible_samples_for_test_set)
 
-    # only for fold: 1
-    indices = {1: {'Train': train_docs, 'Test': test_docs}}
+            train_docs.extend([ele for ele in list_of_author_docs if ele not in test_docs and ele not in train_docs])
+
+            # just add previous test sets to current train set
+
+        print("******* Fold {} *******".format(fold_counter))
+        print("Number of Train docs: {}".format(len(train_docs)))
+        print("Number of Test docs: {}".format(len(test_docs)))
+        print("Number of violations in train/test split because of already"
+              " existence of a paper from target author in test set: {}".format(rule_violence_counter))
+
+        if shuffle_at_the_end:
+            random.shuffle(train_docs)
+            random.shuffle(test_docs)
+
+        # only for fold: 1
+        indices[fold_counter] = {'Train': train_docs, 'Test': test_docs}
 
     if save_to_pkl:
         with open('{}'.format(indices_dict_file_path), 'wb') as f:
@@ -532,3 +556,49 @@ def create_user_item(x, y):
                 rating.append(1)
     df = pd.DataFrame({'itemID': itemID, 'userID': userID, 'rating': rating})
     return df
+
+
+def dataset_histo(min_count=3):
+    data = load_preprocessed_dataset()
+    user_count = []
+    skill_count = []
+    for sample in data:
+        if len(sample[2].nonzero()[1]) > min_count:
+            skill_count.append(len(sample[1].nonzero()[1]))
+            user_count.append(len(sample[2].nonzero()[1]))
+
+
+    plt.figure(0)
+    plt.hist(skill_count, bins='auto')
+    skill_hist, skill_bins = np.histogram(skill_count, bins=range(30))
+
+    plt.figure(1)
+    plt.hist(user_count, bins='auto')
+    user_hist, user_bins = np.histogram(user_count, bins=range(20))
+
+    book = xlwt.Workbook()
+    sheet1 = book.add_sheet('skill')
+    sheet2 = book.add_sheet('user')
+
+    sheet1.write(0,0,'bins')
+    sheet1.write(0,1,'quantity')
+    for i, e in enumerate(skill_hist):
+        sheet1.write(i+1, 0, int(skill_bins[i]))
+        sheet1.write(i+1, 1, int(skill_hist[i]))
+
+    sheet2.write(0,0,'bins')
+    sheet2.write(0,1,'quantity')
+    for i, e in enumerate(user_hist):
+        sheet2.write(i+1, 0, int(user_bins[i]))
+        sheet2.write(i+1, 1, int(user_hist[i]))
+
+    name = "histogram.xls"
+    book.save(name)
+    book.save(TemporaryFile())
+
+    plt.show()
+
+
+    return np.mean(skill_count), np.mean(user_count)
+
+# dataset_histo(min_count=0)

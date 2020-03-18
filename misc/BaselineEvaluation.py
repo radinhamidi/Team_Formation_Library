@@ -1,3 +1,4 @@
+import csv
 import pickle as pkl
 from dal.load_dblp_data import *
 from cmn.utils import crossValidate
@@ -5,12 +6,14 @@ import eval.evaluator as dblp_eval
 import eval.ranking as rk
 from eval import plotter
 import ml_metrics as metrics
+import dal.load_dblp_data as dblp
+
 
 seed = 7
 np.random.seed(seed)
 k = 50
-year = 2009
-# year = 2017
+# year = 2009
+year = 2017
 
 
 # fax = './x_sampleset.pkl'
@@ -41,6 +44,10 @@ year = 2009
 
 
 ### Writing target teams skills into file
+# train_test_indices = dblp.load_train_test_indices()
+# dataset = dblp.load_preprocessed_dataset()
+# fold_counter = 1
+# x_train, y_train, x_test, y_test = dblp.get_fold_data(fold_counter, dataset, train_test_indices)
 # skill_dir='../dataset/invertedTermCount.txt'
 # skills, skills_freq = load_skills(skill_dir)
 # skills = np.asarray(skills)
@@ -66,21 +73,33 @@ def calc_r_at_k(prediction, true):
         all_recall.append(recall/t.__len__())
     return np.mean(all_recall), all_recall
 
-def find_indices(prediction ,true):
+
+def filter_len(prediction ,true, min_true=1):
     preds = []
     trues = []
-    for pred, t in zip(prediction, true):
-        t = np.asarray(t)
-        pred = np.asarray(pred)
-        t_indices = np.argwhere(t)
-        if t_indices.__len__() == 0:
-            continue
-        pred_indices = pred.argsort()[:][::-1] #sorting checkup
-        pred_indices = list(pred_indices)
-        pred_indices = [i for i in pred_indices if i in np.argwhere(pred)]
-        preds.append(pred_indices)
-        trues.append([int(t) for t in t_indices])
+    for p, t in zip(prediction, true):
+        if len(t) >= min_true:
+            preds.append(p)
+            trues.append(t)
     return preds, trues
+
+
+def get_user_skill_dict(skill_sets, user_sets):
+    user_skill = {}
+    for skills, users in zip(skill_sets, user_sets):
+        for u in users:
+            if u not in user_skill.keys():
+                user_skill[u] = []
+            user_skill[u].extend(skills)
+    return user_skill
+
+
+def get_skill_sets():
+    with open('./baselineOutputs/baseline_skill_test.csv') as f:
+        skill_sets = []
+        for line in f.readlines():
+            skill_sets.append([s.strip() for s in line.split(',')])
+    return skill_sets
 
 
 authorNameIds = pandas.read_csv('./baselineOutputs/authorNameId_{}.txt'.format(year), encoding='utf_8', header=None, delimiter='	', names=["NameID", "Author"])
@@ -93,7 +112,6 @@ with open('./baselineOutputs/test_authors_{}.csv'.format(year), 'r') as f:
             diff = k - authors.__len__()
             authors += ['-1'] * diff
         predictions.append(authors)
-predictions_list = predictions.copy()
 predictions = np.asarray(predictions)
 
 y_test = []
@@ -108,26 +126,39 @@ for testIndex in testIndices:
             authorIDs = sample[2].nonzero()[1]
             y_test.append(authorNames_true[authorIDs])
             continue
-y_test_list = [list(y) for y in y_test]
 y_test = np.asarray(y_test)
 
 k_set = np.arange(1, k+1, 1)
 r_at_k = dblp_eval.init_eval_holder(k_set) # all r@k of instances in one fold and one k_evaluation_set
+r_at_k_all = dblp_eval.init_eval_holder(k_set) # all r@k of instances in one fold and one k_evaluation_set
 mapk = dblp_eval.init_eval_holder(k_set) # all r@k of instances in one fold and one k_evaluation_set
 ndcg = dblp_eval.init_eval_holder(k_set) # all r@k of instances in one fold and one k_evaluation_set
 mrr = dblp_eval.init_eval_holder(k_set) # all r@k of instances in one fold and one k_evaluation_set
+tf_score = dblp_eval.init_eval_holder(k_set)  # all r@k of instances in one fold and one k_evaluation_set
+pred_idx, test_idx = filter_len(predictions, y_test)
+pred_idx_list = [list(y) for y in pred_idx]
+test_idx_list = [list(y) for y in test_idx]
+pred_idx = np.asarray(pred_idx)
+test_idx = np.asarray(test_idx)
+user_skill_dict = get_user_skill_dict(get_skill_sets(), y_test)
 for target_k in k_set:
-    all_recall_mean, all_recall = calc_r_at_k(predictions[:, :target_k], y_test)
-    r_at_k[target_k] = all_recall_mean
-    mapk[target_k] = metrics.mapk(y_test_list, predictions_list, k=target_k)
-    ndcg[target_k] = rk.ndcg_at(predictions_list, y_test_list, k=k)
-mrr[target_k] = dblp_eval.mean_reciprocal_rank(dblp_eval.cal_relevance_score(predictions_list, y_test_list))
+    all_recall_mean, all_recall = calc_r_at_k(pred_idx[:, :target_k], test_idx)
+    r_at_k[target_k].append(all_recall_mean)
+    r_at_k_all[target_k].append(all_recall)
+    mapk[target_k].append(metrics.mapk(test_idx_list, pred_idx_list, k=target_k))
+    ndcg[target_k].append(rk.ndcg_at(pred_idx_list, test_idx_list, k=target_k))
+    mrr[target_k].append(dblp_eval.mean_reciprocal_rank(dblp_eval.cal_relevance_score(pred_idx_list[:][:target_k], test_idx_list)))
+    tf_score[target_k].append(dblp_eval.team_formation_feasiblity(predictions, y_test, user_skill_dict, target_k))
+
 plotter.plot_at_k(k_set, r_at_k, 'Recall@k')
 
 
 
 with open('./Baseline_{}_r_at_k_50.pkl'.format(year), 'wb') as f:
     pkl.dump(r_at_k, f)
+
+with open('./Baseline_{}_r_at_k_all_50.pkl'.format(year), 'wb') as f:
+    pkl.dump(r_at_k_all, f)
 
 with open('./Baseline_{}_mapk_50.pkl'.format(year), 'wb') as f:
     pkl.dump(mapk, f)
@@ -137,4 +168,7 @@ with open('./Baseline_{}_ndcg_50.pkl'.format(year), 'wb') as f:
 
 with open('./Baseline_{}_mrr_50.pkl'.format(year), 'wb') as f:
     pkl.dump(mrr, f)
+
+with open('./Baseline_{}_tf_50.pkl'.format(year), 'wb') as f:
+    pkl.dump(tf_score, f)
 
