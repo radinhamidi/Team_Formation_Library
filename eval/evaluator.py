@@ -97,11 +97,11 @@ def init_eval_holder(evaluation_k_set=None):
     return dict
 
 
-def cal_relevance_score(prediction, truth):
+def cal_relevance_score(prediction, truth, k=50):
     rs = []
     for p, t in zip(prediction, truth):
         r = []
-        for p_record in p:
+        for p_record in p[:k]:
             if p_record in t:
                 r.append(1)
             else:
@@ -175,6 +175,38 @@ def team_validtor(p_users, t_users, user_skill_dict, k=10):
         if skill not in having_skills:
             return 0
     return 1
+
+
+def load_output_file(file_path):
+    pred_indices = {}
+    true_indices = {}
+    calc_time = {}
+
+    with open(file_path, 'r') as f:
+        lines = f.readlines()
+        for line in lines[1:]:
+            results = line.split(sep=',')
+            method_name = results[0]
+            kfold = int(results[1])
+            fold_number = int(results[2])
+            prediction_number = int(results[3])
+            true_number = int(results[4])
+            elps_time = float(results[5])
+            prediction_index = [int(i) for i in results[6:6+prediction_number]]
+            true_index = [int(i) for i in results[6+prediction_number:6+prediction_number+true_number]]
+
+            if fold_number not in pred_indices.keys():
+                pred_indices[fold_number] = []
+            if fold_number not in true_indices.keys():
+                true_indices[fold_number] = []
+            if true_number not in calc_time.keys():
+                calc_time[true_number] = []
+            pred_indices[fold_number].append(prediction_index)
+            true_indices[fold_number].append(true_index)
+            calc_time[true_number].append(elps_time)
+
+        f.close()
+    return method_name, pred_indices, true_indices, calc_time
 
 # #[u4, u1, u7, u2] va [u1, u2, u7]
 # print(r_at_k([[0.3, 0.1, 0, 0.5, 0, 0, 0.2]], [[1,1,0,0,0,0,1]], k=1))#0/3 = 0

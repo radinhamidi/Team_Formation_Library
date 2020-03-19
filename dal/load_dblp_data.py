@@ -558,6 +558,15 @@ def create_user_item(x, y):
     return df
 
 
+def get_user_HIndex(file_path='../dataset/authorHIndex.txt'):
+    user_hindex_dict = {}
+    user_hindex = pandas.read_csv(file_path, encoding='utf_8', header=None, delimiter='	')
+    user_hindex = (user_hindex.iloc[:, :2]).values
+    for item in user_hindex:
+        user_hindex_dict[item[0]] = item[1]
+    return user_hindex_dict
+
+
 def dataset_histo(min_count=3):
     data = load_preprocessed_dataset()
     user_count = []
