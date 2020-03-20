@@ -5,13 +5,6 @@ import ml_metrics as metrics
 import dal.load_dblp_data as dblp
 import eval.evaluator as dblp_eval
 
-
-#eval settings
-k_fold = 10
-k_max = 100 #cut_off for eval
-evaluation_k_set = np.arange(1, k_max+1, 1)
-fold_set = np.arange(1, k_fold+1, 1)
-
 user_HIndex = dblp.get_user_HIndex()
 user_skill_dict = dblp.get_user_skill_dict(dblp.load_preprocessed_dataset())
 
@@ -28,12 +21,17 @@ SVDpp = '../output/predictions/SVDpp_2020_03_18-15_16_00.csv'
 
 file_names = [OKLO, OKLU, OVAEO, OVAEU, SKLO, SKLU, SVAEO, SVAEU, Sapienza, SVDpp]
 for file_name in file_names:
-    method_name, pred_indices, true_indices, calc_time = dblp_eval.load_output_file(file_name)
+    method_name, pred_indices, true_indices, calc_time, k_fold, k_max = dblp_eval.load_output_file(file_name)
+    # eval settings
+    evaluation_k_set = np.arange(1, k_max + 1, 1)
+    fold_set = np.arange(1, k_fold + 1, 1)
+    # Initializing metric holders
     Coverage = dblp_eval.init_eval_holder(evaluation_k_set)
     nDCG = dblp_eval.init_eval_holder(evaluation_k_set)
     MAP = dblp_eval.init_eval_holder(evaluation_k_set)
     MRR = dblp_eval.init_eval_holder(evaluation_k_set)
     Quality = dblp_eval.init_eval_holder(evaluation_k_set)
+    # writing output file
     result_output_name = "../output/eval_results/{}.csv".format(method_name)
     with open(result_output_name, 'w') as file:
         writer = csv.writer(file)
@@ -72,18 +70,5 @@ for file_name in file_names:
             writer.writerow([j, Coverage_mean, Coverage_std, nDCG_mean, nDCG_std, MAP_mean, MAP_std, MRR_mean, MRR_std, Quality_mean, Quality_std])
 
         file.close()
-    #     print("Evaluating for top {} records in fold {}.".format(k, fold_counter))
-    #     r_at_k, r_at_k_array = dblp_eval.r_at_k(pred_indices, true_indices, k=k)
-    #     r_at_k_overall[k].append(r_at_k)
-    #     r_at_k_all[k].append(r_at_k_array)
-    #     print("For top {} in test data: R@{}:{}".format(k, k, r_at_k))
-    #     mapk[k].append(metrics.mapk(true_indices, pred_indices, k=k))
-    #     print("For top {} in test data: MAP@{}:{}".format(k, k, mapk[k][-1]))
-    #     ndcg[k].append(rk.ndcg_at(pred_indices, true_indices, k=k))
-    #     print("For top {} in test data: NDCG@{}:{}".format(k, k, ndcg[k][-1]))
-    #     mrr[k].append(dblp_eval.mean_reciprocal_rank(dblp_eval.cal_relevance_score(pred_indices[:k], true_indices)))
-    #     print("For top {} in test data: MRR@{}:{}".format(k, k, mrr[k][-1]))
-    #     tf_score[k].append(dblp_eval.team_formation_feasiblity(pred_indices, true_indices, user_skill_dict, k))
-    #     print("For top {} in test data: TF Score@{}:{}".format(k, k, tf_score[k][-1]))
 
 

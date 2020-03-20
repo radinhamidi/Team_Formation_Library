@@ -206,7 +206,7 @@ def load_output_file(file_path):
             calc_time[true_number].append(elps_time)
 
         f.close()
-    return method_name, pred_indices, true_indices, calc_time
+    return method_name, pred_indices, true_indices, calc_time, kfold, prediction_number
 
 # #[u4, u1, u7, u2] va [u1, u2, u7]
 # print(r_at_k([[0.3, 0.1, 0, 0.5, 0, 0, 0.2]], [[1,1,0,0,0,0,1]], k=1))#0/3 = 0
