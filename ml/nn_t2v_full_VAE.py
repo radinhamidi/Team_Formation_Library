@@ -30,7 +30,7 @@ method_name = 'S_VAE_U'
 
 #eval settings
 k_fold = 10
-k_max = 50 #cut_off for recall
+k_max = 100 #cut_off for recall
 evaluation_k_set = np.arange(1, k_max+1, 1)
 
 #nn settings
