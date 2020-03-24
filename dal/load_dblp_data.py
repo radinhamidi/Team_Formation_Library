@@ -13,6 +13,8 @@ from ml.team2vec import *
 import matplotlib.pyplot as plt
 import xlwt
 from tempfile import TemporaryFile
+from iteration_utilities import deepflatten
+
 
 publication_filter = ['sigmod', 'vldb', 'icde', 'icdt', 'edbt', 'pods', 'kdd', 'www',
                       'sdm', 'pkdd', 'icdm', 'cikm', 'aaai', 'icml', 'ecml', 'colt',
@@ -310,8 +312,8 @@ def tokenize(text):
 
 
 def dataset_preprocessing(dataset, min_records=10, kfolds=10, max_features=2000, n_gram=3,
-                          dataset_source_dir='../dataset/dblp.pkl', shuffle_at_the_end=True,
-                          save_to_pkl=True, save_to_csv=True, author_dir='../dataset/authorNameId.txt',
+                          dataset_source_dir='../dataset/dblp.pkl', save_to_pkl=True, save_to_csv=True,
+                          author_dir='../dataset/authorNameId.txt',
                           indices_dict_file_path='../dataset/Train_Test_indices.pkl', baseline_path='../dataset/',
                           preprocessed_dataset_file_path='../dataset/dblp_preprocessed_dataset.pkl', seed=7):
     random.seed(seed)
@@ -390,39 +392,40 @@ def dataset_preprocessing(dataset, min_records=10, kfolds=10, max_features=2000,
         with open('{}'.format(preprocessed_dataset_file_path), 'wb') as f:
             pkl.dump(preprocessed_dataset, f)
 
-    indices = split_data(kfolds, author_docID_dict, eligible_documents, shuffle_at_the_end, save_to_pkl, save_to_csv,
+    indices = split_data(kfolds, author_docID_dict, eligible_documents, save_to_pkl, save_to_csv,
                          indices_dict_file_path, baseline_path)
 
-    train_docs = indices[1]['Train']
-    test_docs = indices[1]['Test']
-    authorNames, _ = load_authors(author_dir)
-    authorNames = [author.strip().lower() for author in authorNames]
+    for fold in range(1, kfolds+1):
+        train_docs = indices[fold]['Train']
+        test_docs = indices[fold]['Test']
+        authorNames, _ = load_authors(author_dir)
+        authorNames = [author.strip().lower() for author in authorNames]
 
-    feature_names = np.asarray(vect.get_feature_names())
-    if save_to_csv:
-        with open('{}baseline_authorName_skill_train.csv'.format(baseline_path), 'w') as f:
-            for eligible_author in eligible_authors:
-                docIDs = author_docID_dict[eligible_author]
-                docIDs = [docID for docID in docIDs if docID in train_docs]
-                docsTitles = [d['title'].strip() for d in data[docIDs]]
-                features = Counter()
-                for title in docsTitles:
-                    features.update(feature_names[vect.transform([title]).nonzero()[1]])
-                line = [authorNames[eligible_author]]
-                line.extend(features.keys())
-                f.write(','.join(line) + '\n')
-            f.close()
-        with open('{}baseline_skill_test.csv'.format(baseline_path), 'w') as f:
-            docsTitles = [d['title'].strip() for d in data[test_docs]]
-            for docTitle in docsTitles:
-                line = feature_names[vect.transform([docTitle]).nonzero()[1]]
-                f.write(','.join(line) + '\n')
-            f.close()
+        feature_names = np.asarray(vect.get_feature_names())
+        if save_to_csv:
+            with open('{}baseline_authorName_skill_train_{}.csv'.format(baseline_path, fold), 'w') as f:
+                for eligible_author in eligible_authors:
+                    docIDs = author_docID_dict[eligible_author]
+                    docIDs = [docID for docID in docIDs if docID in train_docs]
+                    docsTitles = [d['title'].strip() for d in data[docIDs]]
+                    features = Counter()
+                    for title in docsTitles:
+                        features.update(feature_names[vect.transform([title]).nonzero()[1]])
+                    line = [authorNames[eligible_author]]
+                    line.extend(features.keys())
+                    f.write(','.join(line) + '\n')
+                f.close()
+            with open('{}baseline_skill_test_{}.csv'.format(baseline_path, fold), 'w') as f:
+                docsTitles = [d['title'].strip() for d in data[test_docs]]
+                for docTitle in docsTitles:
+                    line = feature_names[vect.transform([docTitle]).nonzero()[1]]
+                    f.write(','.join(line) + '\n')
+                f.close()
 
     return indices, preprocessed_dataset
 
 
-def split_data(kfolds, author_docID_dict, eligible_documents, shuffle_at_the_end, save_to_pkl, save_to_csv,
+def split_data(kfolds, author_docID_dict, eligible_documents, save_to_pkl, save_to_csv,
                indices_dict_file_path, baseline_path):
 
     indices = {}
@@ -432,7 +435,13 @@ def split_data(kfolds, author_docID_dict, eligible_documents, shuffle_at_the_end
         rule_violence_counter = 0
 
         for ex_folds in range(1, fold_counter):
-            train_docs.append(indices[ex_folds]['Train'])
+            train_docs.extend(indices[ex_folds]['Test'])
+
+        train_docs = list(deepflatten(train_docs))
+        c_train = Counter()
+        c_train.update(train_docs)
+        train_docs = list(c_train.keys())
+        train_docs.sort()
 
         for author in author_docID_dict.keys():
             list_of_author_docs = author_docID_dict.get(author)
@@ -461,33 +470,31 @@ def split_data(kfolds, author_docID_dict, eligible_documents, shuffle_at_the_end
 
             train_docs.extend([ele for ele in list_of_author_docs if ele not in test_docs and ele not in train_docs])
 
-            # just add previous test sets to current train set
-
         print("******* Fold {} *******".format(fold_counter))
         print("Number of Train docs: {}".format(len(train_docs)))
         print("Number of Test docs: {}".format(len(test_docs)))
         print("Number of violations in train/test split because of already"
               " existence of a paper from target author in test set: {}".format(rule_violence_counter))
 
-        if shuffle_at_the_end:
-            random.shuffle(train_docs)
-            random.shuffle(test_docs)
+        test_docs = list(deepflatten(test_docs))
+        c_test = Counter()
+        c_test.update(test_docs)
+        test_docs = list(c_test.keys())
+        test_docs.sort()
 
-        # only for fold: 1
         indices[fold_counter] = {'Train': train_docs, 'Test': test_docs}
+
+        if save_to_csv:
+            with open('{}baseline_train_indices_{}.csv'.format(baseline_path, fold_counter), 'w') as f:
+                f.write(','.join(str(x) for x in train_docs) + '\n')
+                f.close()
+            with open('{}baseline_test_indices_{}.csv'.format(baseline_path, fold_counter), 'w') as f:
+                f.write(','.join(str(x) for x in test_docs) + '\n')
+                f.close()
 
     if save_to_pkl:
         with open('{}'.format(indices_dict_file_path), 'wb') as f:
             pkl.dump(indices, f)
-
-    # only for fold: 1
-    if save_to_csv:
-        with open('{}baseline_train_indices.csv'.format(baseline_path), 'w') as f:
-            f.write(','.join(str(x) for x in train_docs) + '\n')
-            f.close()
-        with open('{}baseline_test_indices.csv'.format(baseline_path), 'w') as f:
-            f.write(','.join(str(x) for x in test_docs) + '\n')
-            f.close()
 
     return indices
 
@@ -507,6 +514,7 @@ def get_fold_data(fold_counter, dataset, train_test_indices):
         elif id in test_index:
             x_test.append(sample[1])
             y_test.append(sample[2])
+
     x_train = np.asarray(x_train).reshape(len(x_train), -1)
     y_train = np.asarray(y_train).reshape(len(y_train), -1)
     x_test = np.asarray(x_test).reshape(len(x_test), -1)

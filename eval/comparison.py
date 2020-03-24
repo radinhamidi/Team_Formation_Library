@@ -15,7 +15,7 @@ OVAEU = '../output/predictions/O_VAE_U_2020_03_18-06_05_58.csv'
 SKLO = '../output/predictions/S_KL_O_2020_03_17-22_48_21.csv'
 SKLU = '../output/predictions/S_KL_U_2020_03_18-06_39_48.csv'
 SVAEO = '../output/predictions/S_VAE_O_2020_03_17-12_53_29.csv'
-SVAEU = '../output/predictions/S_VAE_U_2020_03_18-06_27_10.csv'
+SVAEU = '../output/predictions/S_VAE_U_2020_03_19-20_44_52.csv'
 Sapienza = '../output/predictions/Sapienza_2020_03_17-11_45_52.csv'
 SVDpp = '../output/predictions/SVDpp_2020_03_18-15_16_00.csv'
 

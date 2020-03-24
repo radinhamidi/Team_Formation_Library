@@ -11,9 +11,9 @@ import dal.load_dblp_data as dblp
 
 seed = 7
 np.random.seed(seed)
-k = 50
-# year = 2009
-year = 2017
+k_fold = 10
+year = 2009
+# year = 2017
 
 
 # fax = './x_sampleset.pkl'
@@ -46,20 +46,22 @@ year = 2017
 ### Writing target teams skills into file
 # train_test_indices = dblp.load_train_test_indices()
 # dataset = dblp.load_preprocessed_dataset()
-# fold_counter = 1
-# x_train, y_train, x_test, y_test = dblp.get_fold_data(fold_counter, dataset, train_test_indices)
-# skill_dir='../dataset/invertedTermCount.txt'
-# skills, skills_freq = load_skills(skill_dir)
-# skills = np.asarray(skills)
+# for fold_counter in range(1, k_fold+1):
+#     x_train, y_train, x_test, y_test = dblp.get_fold_data(fold_counter, dataset, train_test_indices)
+#     skill_dir='../dataset/invertedTermCount.txt'
+#     skills, skills_freq = load_skills(skill_dir)
+#     skills = np.asarray(skills)
 #
-# with open('test_skills.csv', 'w', newline='') as file:
-#     writer = csv.writer(file)
-#     for skill_record in x_test:
-#         skill_set = []
-#         for skill_id in np.nonzero(skill_record)[0]:
-#             skill_set.append(skills[skill_id])
-#         writer.writerow(skill_set)
+#     with open('test_skills_{}.csv'.format(fold_counter), 'w', newline='') as file:
+#         writer = csv.writer(file)
+#         for skill_record in x_test:
+#             skill_set = []
+#             for skill_id in np.nonzero(skill_record)[0]:
+#                 skill_set.append(skills[skill_id])
+#             writer.writerow(skill_set)
+#         file.close()
 
+fold_counter = 1
 
 
 ##### After running baseline code
@@ -94,20 +96,23 @@ def get_user_skill_dict(skill_sets, user_sets):
     return user_skill
 
 
-def get_skill_sets():
-    with open('./baselineOutputs/baseline_skill_test.csv') as f:
+def get_skill_sets(yr, f_counter):
+    with open('./baselineOutputs/{}/baseline_skill_test_{}.csv'.format(yr, f_counter)) as f:
         skill_sets = []
         for line in f.readlines():
             skill_sets.append([s.strip() for s in line.split(',')])
+    f.close()
     return skill_sets
 
 
-authorNameIds = pandas.read_csv('./baselineOutputs/authorNameId_{}.txt'.format(year), encoding='utf_8', header=None, delimiter='	', names=["NameID", "Author"])
-with open('./baselineOutputs/test_authors_{}.csv'.format(year), 'r') as f:
+authorNameIds = pandas.read_csv('./baselineOutputs/{}/authorNameId.txt'.format(year), encoding='utf_8', header=None, delimiter='	', names=["NameID", "Author"])
+with open('./baselineOutputs/{}/test_authors_{}.csv'.format(year, fold_counter), 'r') as f:
     predictions = []
     lines = f.readlines()
     for line in lines:
-        authors = [authorNameIds.loc[authorNameIds['NameID']==int(author)]['Author'].values[0].strip().lower() for author in line.split(',')[1:]]
+        splitted = line.split(',')
+        authors = [authorNameIds.loc[authorNameIds['NameID']==int(author)]['Author'].values[0].strip().lower() for author in splitted[5:]]
+        k = int(splitted[3])
         if authors.__len__() < k:
             diff = k - authors.__len__()
             authors += ['-1'] * diff
@@ -140,7 +145,7 @@ pred_idx_list = [list(y) for y in pred_idx]
 test_idx_list = [list(y) for y in test_idx]
 pred_idx = np.asarray(pred_idx)
 test_idx = np.asarray(test_idx)
-user_skill_dict = get_user_skill_dict(get_skill_sets(), y_test)
+user_skill_dict = get_user_skill_dict(get_skill_sets(year, fold_counter), y_test)
 for target_k in k_set:
     all_recall_mean, all_recall = calc_r_at_k(pred_idx[:, :target_k], test_idx)
     r_at_k[target_k].append(all_recall_mean)

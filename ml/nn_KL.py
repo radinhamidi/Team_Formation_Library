@@ -52,7 +52,7 @@ else:
     if not dblp.ae_data_exist(file_path='../dataset/ae_dataset.pkl'):
         dblp.extract_data(filter_journals=True, skill_size_filter=min_skill_size, member_size_filter=min_member_size)
     if not dblp.preprocessed_dataset_exist() or not dblp.train_test_indices_exist():
-        dblp.dataset_preprocessing(dblp.load_ae_dataset(file_path='../dataset/ae_dataset.pkl'), seed=seed, kfolds=k_fold, shuffle_at_the_end=True)
+        dblp.dataset_preprocessing(dblp.load_ae_dataset(file_path='../dataset/ae_dataset.pkl'), seed=seed, kfolds=k_fold)
     dataset = dblp.load_preprocessed_dataset()
     train_test_indices = dblp.load_train_test_indices()
 
@@ -76,7 +76,7 @@ load_weights_from_file_q = input('Load weights from file? (y/n)')
 more_train_q = input('Train more? (y/n)')
 
 time_str = time.strftime("%Y_%m_%d-%H_%M_%S")
-result_output_name = "../output/predictions/{}_{}.csv".format(method_name, time_str)
+result_output_name = "../output/predictions/{}_output.csv".format(method_name)
 with open(result_output_name, 'w') as file:
     writer = csv.writer(file)
     writer.writerow(
