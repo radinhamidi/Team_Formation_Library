@@ -17,7 +17,7 @@ import ml_metrics as metrics
 # fix random seed for reproducibility
 seed = 10
 np.random.seed(seed)
-es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=20, min_delta=1)
+es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=15, min_delta=1)
 
 #settings
 dataset_name = 'DBLP'
@@ -30,7 +30,7 @@ evaluation_k_set = np.arange(1, k_max+1, 1)
 
 #nn settings
 epochs = 200
-back_propagation_batch_size = 32
+back_propagation_batch_size = 64
 min_skill_size = 0
 min_member_size = 0
 encoding_dim = 100

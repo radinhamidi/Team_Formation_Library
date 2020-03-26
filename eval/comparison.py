@@ -8,18 +8,20 @@ import eval.evaluator as dblp_eval
 user_HIndex = dblp.get_user_HIndex()
 user_skill_dict = dblp.get_user_skill_dict(dblp.load_preprocessed_dataset())
 
-OKLO = '../output/predictions/O_KL_O_2020_03_18-09_25_38.csv'
-OKLU = '../output/predictions/O_KL_U_2020_03_18-06_11_57.csv'
-OVAEO = '../output/predictions/O_VAE_O_2020_03_18-06_53_07.csv'
-OVAEU = '../output/predictions/O_VAE_U_2020_03_18-06_05_58.csv'
-SKLO = '../output/predictions/S_KL_O_2020_03_17-22_48_21.csv'
-SKLU = '../output/predictions/S_KL_U_2020_03_18-06_39_48.csv'
-SVAEO = '../output/predictions/S_VAE_O_2020_03_17-12_53_29.csv'
-SVAEU = '../output/predictions/S_VAE_U_2020_03_19-20_44_52.csv'
-Sapienza = '../output/predictions/Sapienza_2020_03_17-11_45_52.csv'
-SVDpp = '../output/predictions/SVDpp_2020_03_18-15_16_00.csv'
+OKLO = '../output/predictions/O_KL_O_output.csv'
+OKLU = '../output/predictions/O_KL_U_output.csv'
+OVAEO = '../output/predictions/O_VAE_O_output.csv'
+OVAEU = '../output/predictions/O_VAE_U_output.csv'
+SKLO = '../output/predictions/S_KL_O_output.csv'
+SKLU = '../output/predictions/S_KL_U_output.csv'
+SVAEO = '../output/predictions/S_VAE_O_output.csv'
+SVAEU = '../output/predictions/S_VAE_U_output.csv'
+Sapienza = '../output/predictions/Sapienza_output.csv'
+SVDpp = '../output/predictions/SVDpp_output.csv'
+BL2009 = '../output/predictions/BL2009_output.csv'
+BL2017 = '../output/predictions/BL2017_output.csv'
 
-file_names = [OKLO, OKLU, OVAEO, OVAEU, SKLO, SKLU, SVAEO, SVAEU, Sapienza, SVDpp]
+file_names = [OKLO, OKLU, OVAEO, OVAEU, SKLO, SKLU, SVAEO, SVAEU, Sapienza, SVDpp, BL2009, BL2017]
 for file_name in file_names:
     method_name, pred_indices, true_indices, calc_time, k_fold, k_max = dblp_eval.load_output_file(file_name)
     # eval settings
@@ -31,6 +33,9 @@ for file_name in file_names:
     MAP = dblp_eval.init_eval_holder(evaluation_k_set)
     MRR = dblp_eval.init_eval_holder(evaluation_k_set)
     Quality = dblp_eval.init_eval_holder(evaluation_k_set)
+    Hindex_min = dblp_eval.init_eval_holder(evaluation_k_set)
+    Hindex_avg = dblp_eval.init_eval_holder(evaluation_k_set)
+    Hindex_max = dblp_eval.init_eval_holder(evaluation_k_set)
     # writing output file
     result_output_name = "../output/eval_results/{}.csv".format(method_name)
     with open(result_output_name, 'w') as file:
@@ -42,7 +47,9 @@ for file_name in file_names:
                          'MAP Mean', 'MAP STDev',
                          'MRR Mean', 'MRR STDev',
                          'Quality Mean', 'Quality STDev',
-                         'H Index'])
+                         'H Index Min Mean', 'H Index Min STDev',
+                         'H Index Avg Mean', 'H Index Avg STDev',
+                         'H Index Max Mean', 'H Index Max STDev'])
         for i in fold_set:
             truth = true_indices[i]
             pred = pred_indices[i]
@@ -53,21 +60,44 @@ for file_name in file_names:
                 nDCG[j].append(rk.ndcg_at(pred, truth, k=j))
                 MAP[j].append(metrics.mapk(truth, pred, k=j))
                 MRR[j].append(dblp_eval.mean_reciprocal_rank(dblp_eval.cal_relevance_score(pred, truth, k=j)))
-                Quality[j].append(dblp_eval.team_formation_feasiblity(pred, truth, user_skill_dict, k=j))
+                Quality[j].append(dblp_eval.team_formation_feasibility(pred, truth, user_skill_dict, k=j))
+                Hindex_min[j].append(dblp_eval.team_formation_feasibility(pred, truth, user_x_dict=user_HIndex, mode='hindex', hindex_mode='min', k=j))
+                Hindex_avg[j].append(dblp_eval.team_formation_feasibility(pred, truth, user_x_dict=user_HIndex, mode='hindex', hindex_mode='avg', k=j))
+                Hindex_max[j].append(dblp_eval.team_formation_feasibility(pred, truth, user_x_dict=user_HIndex, mode='hindex', hindex_mode='max', k=j))
 
         for j in evaluation_k_set:
             Coverage_mean = np.mean(Coverage[j])
             Coverage_std = np.std(Coverage[j])
+
             nDCG_mean = np.mean(nDCG[j])
             nDCG_std = np.std(nDCG[j])
+
             MAP_mean = np.mean(MAP[j])
             MAP_std = np.std(MAP[j])
+
             MRR_mean = np.mean(MRR[j])
             MRR_std = np.std(MRR[j])
+
             Quality_mean = np.mean(Quality[j])
             Quality_std = np.std(Quality[j])
 
-            writer.writerow([j, Coverage_mean, Coverage_std, nDCG_mean, nDCG_std, MAP_mean, MAP_std, MRR_mean, MRR_std, Quality_mean, Quality_std])
+            Hindex_min_mean = np.mean(Hindex_min[j])
+            Hindex_min_std = np.std(Hindex_min[j])
+
+            Hindex_avg_mean = np.mean(Hindex_avg[j])
+            Hindex_avg_std = np.std(Hindex_avg[j])
+
+            Hindex_max_mean = np.mean(Hindex_max[j])
+            Hindex_max_std = np.std(Hindex_max[j])
+
+            writer.writerow([j, Coverage_mean, Coverage_std,
+                             nDCG_mean, nDCG_std,
+                             MAP_mean, MAP_std,
+                             MRR_mean, MRR_std,
+                             Quality_mean, Quality_std,
+                             Hindex_min_mean, Hindex_min_std,
+                             Hindex_avg_mean, Hindex_avg_std,
+                             Hindex_max_mean, Hindex_max_std])
 
         file.close()
 

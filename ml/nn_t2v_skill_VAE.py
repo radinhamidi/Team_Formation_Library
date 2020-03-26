@@ -249,7 +249,7 @@ for fold_counter in range(1,k_fold+1):
     #     print("For top {} in test data: NDCG@{}:{}".format(k, k, ndcg[k][-1]))
     #     mrr[k].append(dblp_eval.mean_reciprocal_rank(dblp_eval.cal_relevance_score(pred_indices[:k], true_indices)))
     #     print("For top {} in test data: MRR@{}:{}".format(k, k, mrr[k][-1]))
-    #     tf_score[k].append(dblp_eval.team_formation_feasiblity(pred_indices, true_indices, user_skill_dict, k))
+    #     tf_score[k].append(dblp_eval.team_formation_feasibility(pred_indices, true_indices, user_skill_dict, k))
     #     print("For top {} in test data: TF Score@{}:{}".format(k, k, tf_score[k][-1]))
 
     # saving model

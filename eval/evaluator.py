@@ -152,11 +152,13 @@ def help_hurt(pred_1, pred_2):
     return diff
 
 
-def team_formation_feasiblity(predictions, truth, user_skill_dict, k=10):
-    score = 0
-    for p, t in zip(predictions, truth):
-        score += team_validtor(p, t, user_skill_dict, k)
-    return score/len(predictions)
+# mode can be 'feasibility' or 'hindex'
+def team_formation_feasibility(predictions, truth, user_x_dict, k=10, mode='feasibility', hindex_mode='avg'):
+    if mode.lower() not in ['feasibility', 'hindex']:
+        raise ValueError('Wrong mode selected. It should be either "feasibility" or "hindex".')
+    score = [team_validtor(p, t, user_x_dict, k=k) if mode == 'feasibility'
+             else team_hindex(p, t, user_x_dict, hindex_mode, k=k) for p, t in zip(predictions, truth)]
+    return np.mean(score)
 
 
 def team_validtor(p_users, t_users, user_skill_dict, k=10):
@@ -174,6 +176,32 @@ def team_validtor(p_users, t_users, user_skill_dict, k=10):
     for skill in required_skills:
         if skill not in having_skills:
             return 0
+    return 1
+
+
+def team_hindex(p_users, t_users, user_hindex_dict, hindex_mode, k=10):
+    having_hindex = []
+    required_hindex = []
+
+    for t_user in t_users:
+        if t_user in user_hindex_dict.keys():
+            required_hindex.append(user_hindex_dict[t_user])
+
+    for p_user in p_users[:k]:
+        if p_user in user_hindex_dict.keys():
+            having_hindex.append(user_hindex_dict[p_user])
+
+    if len(having_hindex) == 0:
+        having_hindex.append(0)
+    if len(required_hindex) == 0:
+        required_hindex.append(0)
+
+    if hindex_mode.lower() == 'min':
+        if np.min(having_hindex) < np.min(required_hindex): return 0
+    if hindex_mode.lower() == 'avg':
+        if np.mean(having_hindex) < np.mean(required_hindex): return 0
+    if hindex_mode.lower() == 'max':
+        if np.max(having_hindex) < np.max(required_hindex): return 0
     return 1
 
 
