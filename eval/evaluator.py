@@ -202,6 +202,8 @@ def team_hindex(p_users, t_users, user_hindex_dict, hindex_mode, k=10):
         if np.mean(having_hindex) < np.mean(required_hindex): return 0
     if hindex_mode.lower() == 'max':
         if np.max(having_hindex) < np.max(required_hindex): return 0
+    if hindex_mode.lower() == 'diff':
+        return np.abs(np.average(having_hindex) - np.average(required_hindex))
     return 1
 
 

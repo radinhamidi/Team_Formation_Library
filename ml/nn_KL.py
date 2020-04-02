@@ -34,13 +34,13 @@ k_max = 100
 evaluation_k_set = np.arange(1, k_max+1, 1)
 
 #nn settings
-epochs_in_batch = 10
-epochs_overall = 20
+epochs_in_batch = 25
+epochs_overall = 10
 back_propagation_batch_size = 64
-training_batch_size = 4000
+training_batch_size = 6000
 min_skill_size = 0
 min_member_size = 0
-encoding_dim = 500
+encoding_dim = 700
 
 
 print(K.tensorflow_backend._get_available_gpus())

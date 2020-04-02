@@ -18,10 +18,11 @@ SVAEO = '../output/predictions/S_VAE_O_output.csv'
 SVAEU = '../output/predictions/S_VAE_U_output.csv'
 Sapienza = '../output/predictions/Sapienza_output.csv'
 SVDpp = '../output/predictions/SVDpp_output.csv'
+RRN = '../output/predictions/RRN_output.csv'
 BL2009 = '../output/predictions/BL2009_output.csv'
 BL2017 = '../output/predictions/BL2017_output.csv'
 
-file_names = [OKLO, OKLU, OVAEO, OVAEU, SKLO, SKLU, SVAEO, SVAEU, Sapienza, SVDpp, BL2009, BL2017]
+file_names = [OKLO, OKLU, OVAEO, OVAEU, SKLO, SKLU, SVAEO, SVAEU, Sapienza, SVDpp, RRN, BL2009, BL2017]
 for file_name in file_names:
     method_name, pred_indices, true_indices, calc_time, k_fold, k_max = dblp_eval.load_output_file(file_name)
     # eval settings
@@ -36,20 +37,23 @@ for file_name in file_names:
     Hindex_min = dblp_eval.init_eval_holder(evaluation_k_set)
     Hindex_avg = dblp_eval.init_eval_holder(evaluation_k_set)
     Hindex_max = dblp_eval.init_eval_holder(evaluation_k_set)
+    Hindex_diff = dblp_eval.init_eval_holder(evaluation_k_set)
     # writing output file
-    result_output_name = "../output/eval_results/{}.csv".format(method_name)
+    result_output_name = "../output/eval_results/{}_diff.csv".format(method_name)
     with open(result_output_name, 'w') as file:
         writer = csv.writer(file)
         for strata in sorted(calc_time.keys()):
             writer.writerow(['Strata:', strata, 'Average:', np.mean(calc_time[strata]), 'STDev:', np.std(calc_time[strata])])
-        writer.writerow(['@K', 'Coverage Mean', 'Coverage STDev',
+        writer.writerow(['@K',
+                         'Coverage Mean', 'Coverage STDev',
                          'nDCG Mean', 'nDCG STDev',
                          'MAP Mean', 'MAP STDev',
                          'MRR Mean', 'MRR STDev',
                          'Quality Mean', 'Quality STDev',
                          'H Index Min Mean', 'H Index Min STDev',
                          'H Index Avg Mean', 'H Index Avg STDev',
-                         'H Index Max Mean', 'H Index Max STDev'])
+                         'H Index Max Mean', 'H Index Max STDev',
+                         'H Index Diff Mean', 'H Index Diff STDev'])
         for i in fold_set:
             truth = true_indices[i]
             pred = pred_indices[i]
@@ -64,6 +68,7 @@ for file_name in file_names:
                 Hindex_min[j].append(dblp_eval.team_formation_feasibility(pred, truth, user_x_dict=user_HIndex, mode='hindex', hindex_mode='min', k=j))
                 Hindex_avg[j].append(dblp_eval.team_formation_feasibility(pred, truth, user_x_dict=user_HIndex, mode='hindex', hindex_mode='avg', k=j))
                 Hindex_max[j].append(dblp_eval.team_formation_feasibility(pred, truth, user_x_dict=user_HIndex, mode='hindex', hindex_mode='max', k=j))
+                Hindex_diff[j].append(dblp_eval.team_formation_feasibility(pred, truth, user_x_dict=user_HIndex, mode='hindex', hindex_mode='diff', k=j))
 
         for j in evaluation_k_set:
             Coverage_mean = np.mean(Coverage[j])
@@ -90,15 +95,18 @@ for file_name in file_names:
             Hindex_max_mean = np.mean(Hindex_max[j])
             Hindex_max_std = np.std(Hindex_max[j])
 
-            writer.writerow([j, Coverage_mean, Coverage_std,
+            Hindex_diff_mean = np.mean(Hindex_diff[j])
+            Hindex_diff_std = np.std(Hindex_diff[j])
+
+            writer.writerow([j,
+                             Coverage_mean, Coverage_std,
                              nDCG_mean, nDCG_std,
                              MAP_mean, MAP_std,
                              MRR_mean, MRR_std,
                              Quality_mean, Quality_std,
                              Hindex_min_mean, Hindex_min_std,
                              Hindex_avg_mean, Hindex_avg_std,
-                             Hindex_max_mean, Hindex_max_std])
+                             Hindex_max_mean, Hindex_max_std,
+                             Hindex_diff_mean, Hindex_diff_std])
 
         file.close()
-
-
