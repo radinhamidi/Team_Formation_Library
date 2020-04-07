@@ -1,4 +1,5 @@
 import numpy as np
+import copy
 import ml_metrics as metrics
 from keras_metrics.metrics import true_negative
 
@@ -207,10 +208,12 @@ def team_hindex(p_users, t_users, user_hindex_dict, hindex_mode, k=10):
     return 1
 
 
-def load_output_file(file_path):
+def load_output_file(file_path, foldIDsampleID_strata_dict):
     pred_indices = {}
     true_indices = {}
-    calc_time = {}
+    calc_time_userStrata = {}
+    calc_time_skillStrata = {}
+    foldIDsampleID_strata_dict_temp = copy.deepcopy(foldIDsampleID_strata_dict)
 
     with open(file_path, 'r') as f:
         lines = f.readlines()
@@ -221,6 +224,7 @@ def load_output_file(file_path):
             fold_number = int(results[2])
             prediction_number = int(results[3])
             true_number = int(results[4])
+            skill_strata = foldIDsampleID_strata_dict_temp[fold_number].pop(0)
             elps_time = float(results[5])
             prediction_index = [int(i) for i in results[6:6+prediction_number]]
             true_index = [int(i) for i in results[6+prediction_number:6+prediction_number+true_number]]
@@ -229,14 +233,18 @@ def load_output_file(file_path):
                 pred_indices[fold_number] = []
             if fold_number not in true_indices.keys():
                 true_indices[fold_number] = []
-            if true_number not in calc_time.keys():
-                calc_time[true_number] = []
+            if true_number not in calc_time_userStrata.keys():
+                calc_time_userStrata[true_number] = []
+            if skill_strata not in calc_time_skillStrata.keys():
+                calc_time_skillStrata[skill_strata] = []
             pred_indices[fold_number].append(prediction_index)
             true_indices[fold_number].append(true_index)
-            calc_time[true_number].append(elps_time)
+            calc_time_userStrata[true_number].append(elps_time)
+            calc_time_skillStrata[skill_strata].append(elps_time)
 
         f.close()
-    return method_name, pred_indices, true_indices, calc_time, kfold, prediction_number
+    return method_name, pred_indices, true_indices,\
+           calc_time_userStrata, calc_time_skillStrata, kfold, prediction_number
 
 # #[u4, u1, u7, u2] va [u1, u2, u7]
 # print(r_at_k([[0.3, 0.1, 0, 0.5, 0, 0, 0.2]], [[1,1,0,0,0,0,1]], k=1))#0/3 = 0

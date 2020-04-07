@@ -12,6 +12,7 @@ import pandas as pd
 from ml.team2vec import *
 import matplotlib.pyplot as plt
 import xlwt
+import eval.evaluator as dblp_eval
 from tempfile import TemporaryFile
 from iteration_utilities import deepflatten
 
@@ -148,6 +149,7 @@ def load_authors(dir):
     authors = authorNameIds_sorted.iloc[:, 1]
     return authors.values, nameIDs.values
 
+
 def get_user_skill_dict(data):
     dict = {}
     for sample in data:
@@ -159,6 +161,17 @@ def get_user_skill_dict(data):
                 dict[u] = []
             dict[u].extend(skill)
     return dict
+
+
+def get_foldIDsampleID_stata_dict(data, train_test_indices, kfold=10):
+    evaluation_k_set = np.arange(1, kfold + 1, 1)
+    foldIDsampleID_stata_dict = dblp_eval.init_eval_holder(evaluation_k_set)
+    for fold_counter in evaluation_k_set:
+        _, _, x_test, _ = get_fold_data(fold_counter, data, train_test_indices, mute=True)
+        for smaple in x_test:
+            foldIDsampleID_stata_dict[fold_counter].append(len(smaple[0].nonzero()[1]))
+    return foldIDsampleID_stata_dict
+
 
 def convert_to_pkl(txt_dir='../dataset/dblp.txt', pkl_dir='../dataset/dblp.pkl', ftype='dict'):
     load_dblp_arnet(txt_dir, pkl_dir, ftype=ftype)
@@ -499,7 +512,7 @@ def split_data(kfolds, author_docID_dict, eligible_documents, save_to_pkl, save_
     return indices
 
 
-def get_fold_data(fold_counter, dataset, train_test_indices):
+def get_fold_data(fold_counter, dataset, train_test_indices, mute=False):
     x_train = []
     y_train = []
     x_test = []
@@ -520,9 +533,10 @@ def get_fold_data(fold_counter, dataset, train_test_indices):
     x_test = np.asarray(x_test).reshape(len(x_test), -1)
     y_test = np.asarray(y_test).reshape(len(y_test), -1)
 
-    print('Fold number {}'.format(fold_counter))
-    print('dataset Size: {}'.format(len(dataset)))
-    print('Train Size: {} Test Size: {}'.format(x_train.__len__(), x_test.__len__()))
+    if not mute:
+        print('Fold number {}'.format(fold_counter))
+        print('dataset Size: {}'.format(len(dataset)))
+        print('Train Size: {} Test Size: {}'.format(x_train.__len__(), x_test.__len__()))
     return x_train, y_train, x_test, y_test
 
 

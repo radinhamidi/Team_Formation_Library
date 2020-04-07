@@ -12,6 +12,9 @@ k = 50
 
 user_HIndex = dblp.get_user_HIndex()
 user_skill_dict = dblp.get_user_skill_dict(dblp.load_preprocessed_dataset())
+foldIDsampleID_strata_dict = dblp.get_foldIDsampleID_stata_dict(data=dblp.load_preprocessed_dataset(),
+                                                                train_test_indices=dblp.load_train_test_indices(),
+                                                                kfold=10)
 
 OKLO = '../output/predictions/O_KL_O_output.csv'
 OKLU = '../output/predictions/O_KL_U_output.csv'
@@ -27,8 +30,8 @@ RRN = '../output/predictions/RRN_output.csv'
 BL2009 = '../output/predictions/BL2009_output.csv'
 BL2017 = '../output/predictions/BL2017_output.csv'
 
-# Asking models
 file_names = [OKLO, OKLU, OVAEO, OVAEU, SKLO, SKLU, SVAEO, SVAEU, Sapienza, SVDpp, RRN, BL2009, BL2017]
+# Asking models
 models = input('Enter pair to compare separated by space:\n' + '\n'.join(['{}. {}'.format(i+1, f.split('/')[-1].replace('_output.csv', '')) for i, f in enumerate(file_names)]) + '\n')
 model1 = int(models.split()[0]) - 1
 model2 = int(models.split()[1]) - 1
@@ -36,8 +39,8 @@ file_name1 = file_names[model1]
 file_name2 =file_names[model2]
 
 # loading models outputs
-method_name1, pred_indices1, true_indices1, calc_time1, k_fold1, k_max1 = dblp_eval.load_output_file(file_name1)
-method_name2, pred_indices2, true_indices2, calc_time2, k_fold2, k_max2 = dblp_eval.load_output_file(file_name2)
+method_name1, pred_indices1, true_indices1, _, _, k_fold1, _ = dblp_eval.load_output_file(file_name1, foldIDsampleID_strata_dict)
+method_name2, pred_indices2, true_indices2, _, _, _, _ = dblp_eval.load_output_file(file_name2, foldIDsampleID_strata_dict)
 
 # eval settings
 fold_set = np.arange(1, k_fold1 + 1, 1)
