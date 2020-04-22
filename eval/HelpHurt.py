@@ -6,9 +6,9 @@ import matplotlib.pyplot as plt
 import dal.load_dblp_data as dblp
 import eval.evaluator as dblp_eval
 
-metric = 'ndcg'
 filter_zero = True
-k = 50
+at_k_mx = 10
+at_k_set = range(1,at_k_mx+1,1)
 
 user_HIndex = dblp.get_user_HIndex()
 user_skill_dict = dblp.get_user_skill_dict(dblp.load_preprocessed_dataset())
@@ -46,44 +46,49 @@ method_name2, pred_indices2, true_indices2, _, _, _, _ = dblp_eval.load_output_f
 fold_set = np.arange(1, k_fold1 + 1, 1)
 
 # Initializing metric holders
-holder = dblp_eval.init_eval_holder(fold_set)
+holder_ndcg = dblp_eval.init_eval_holder(at_k_set)
+holder_map = dblp_eval.init_eval_holder(at_k_set)
+holder_mrr = dblp_eval.init_eval_holder(at_k_set)
 
 # calculating the diff
-for i in fold_set:
-    truth1 = true_indices1[i]
-    pred1 = pred_indices1[i]
+for k in at_k_set:
+    for i in fold_set:
+        truth1 = true_indices1[i]
+        pred1 = pred_indices1[i]
 
-    truth2 = true_indices2[i]
-    pred2 = pred_indices2[i]
+        truth2 = true_indices2[i]
+        pred2 = pred_indices2[i]
 
-    print('{} & {}, fold {}, @ {}'.format(method_name1, method_name2, i, k))
-    # if metric.lower() is 'coverage':
-    #     coverage_overall, _ = dblp_eval.r_at_k(pred, truth, k=k)
-    #     holder[k].append(coverage_overall)
-    if metric.lower() == 'ndcg':
-        holder[i].extend([rk.ndcg_at([p1], [t1], k=k) - rk.ndcg_at([p2], [t2], k=k) for
+        print('{} & {}, fold {}, @ {}'.format(method_name1, method_name2, i, k))
+        # if metric.lower() is 'coverage':
+        #     coverage_overall, _ = dblp_eval.r_at_k(pred, truth, k=k)
+        #     holder[k].append(coverage_overall)
+
+        holder_ndcg[k].extend([rk.ndcg_at([p1], [t1], k=k) - rk.ndcg_at([p2], [t2], k=k) for
                           p1, t1, p2, t2 in zip(pred1, truth1, pred2, truth2)])
-    if metric.lower() == 'map':
-        holder[i].extend([metrics.mapk([p1], [t1], k=k) - metrics.mapk([p2], [t2], k=k)
+        holder_map[k].extend([metrics.mapk([p1], [t1], k=k) - metrics.mapk([p2], [t2], k=k)
                           for p1, t1, p2, t2 in zip(pred1, truth1, pred2, truth2)])
-    if metric.lower() == 'mrr':
-        holder[i].extend([dblp_eval.mean_reciprocal_rank(dblp_eval.cal_relevance_score([p1], [t1], k=k)) -
+        holder_mrr[k].extend([dblp_eval.mean_reciprocal_rank(dblp_eval.cal_relevance_score([p1], [t1], k=k)) -
                           dblp_eval.mean_reciprocal_rank(dblp_eval.cal_relevance_score([p2], [t2], k=k))
                           for p1, t1, p2, t2 in zip(pred1, truth1, pred2, truth2)])
 
+NDCG = np.mean(list(holder_ndcg.values()), axis=0)
+MAP = np.mean(list(holder_map.values()), axis=0)
+MRR = np.mean(list(holder_mrr.values()), axis=0)
 # writing output file
-result_output_name = "../output/eval_results/HelpHurt_{}_{}_{}_at{}.csv".format(metric, method_name1, method_name2, k)
+result_output_name = "../output/eval_results/HelpHurt_{}_{}.csv".format(method_name1, method_name2)
 with open(result_output_name, 'w') as file:
     writer = csv.writer(file)
-    for j in fold_set:
-        writer.writerow(['fold{}'.format(j)] + holder[j])
+    writer.writerow(['NDCG', 'MAP', 'MRR'])
+    for j in range(len(NDCG)):
+        writer.writerow([NDCG[j], MAP[j], MRR[j]])
     file.close()
 print('File saved. Under the name: ', result_output_name)
 
-plot_fold = int(input('Fold number for preview?'))
+# Preview test code
 plt.title = 'Help Hurt Plot'
 plt.xlabel = 'Sample #'
-diff = np.sort(holder[plot_fold])[::-1]
+diff = np.sort(NDCG)[::-1]
 if filter_zero: diff = diff[diff.nonzero()]
 for i, j in enumerate(diff):
     plt.bar(i, j, color='b', width=1)
