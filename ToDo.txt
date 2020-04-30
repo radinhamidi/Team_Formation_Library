@@ -1,12 +1,1 @@
 Todo
-1- T2V dataset generation "no document tag" bug fix
-2- Create a table for R@k for different models
-3- Adding other metrics like nDCG or MAP
-4- T2V Team Mode evaluation
-5- T2V Skill embedding training
-6- Check Custom function for model
-https://github.com/buaaliuming/Resources-for-Scholarly-Big-Data
-
-
-
-- Check member tag for nn_t2v.py member evaluation
