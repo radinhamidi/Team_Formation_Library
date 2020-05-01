@@ -598,7 +598,6 @@ def dataset_histo(min_count=3):
             skill_count.append(len(sample[1].nonzero()[1]))
             user_count.append(len(sample[2].nonzero()[1]))
 
-
     plt.figure(0)
     plt.hist(skill_count, bins='auto')
     skill_hist, skill_bins = np.histogram(skill_count, bins=range(30))
@@ -629,7 +628,22 @@ def dataset_histo(min_count=3):
 
     plt.show()
 
-
     return np.mean(skill_count), np.mean(user_count)
 
 # dataset_histo(min_count=0)
+
+
+def get_co_occurrence(save_to_file=True):
+    data = load_preprocessed_dataset('./dataset/dblp_preprocessed_dataset.pkl')
+    mat = np.zeros((data[0][2].shape[1], data[0][2].shape[1]))
+    for sample in data:
+        indices = sample[2].nonzero()[1]
+        for i in indices:
+            for j in indices:
+                if i != j:
+                    mat[i, j] += 1
+
+    if save_to_file:
+        np.savetxt('./output/eval_results/co_occurrence.csv', mat, delimiter=',', fmt='%d')
+
+    return mat
