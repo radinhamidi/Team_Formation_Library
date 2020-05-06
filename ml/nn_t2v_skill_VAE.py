@@ -26,37 +26,41 @@ from cmn.variational import *
 
 class watcher(Callback):
     def on_train_begin(self, logs={}):
-        self.times = []
+        self.intervals = []
         self.ndcg = []
         self.map = []
-        self.mrr = []
+        self.sum = 0
 
     def on_epoch_begin(self, epoch, logs={}):
         self.epoch_time_start = time.time()
 
     def on_epoch_end(self, epoch, logs={}):
-        self.times.append(time.time() - self.epoch_time_start)
-
+        self.sum += time.time() - self.epoch_time_start
+        if epoch < 30:
+            recorder_step = 5
+        elif epoch < 300:
+            recorder_step = 50
+        else:
+            recorder_step = 150
         if epoch%recorder_step == 0:
+            self.intervals.append(self.sum)
+            self.sum = 0
             y_true = y_test
             y_pred = autoencoder.predict(x_test)
             pred_index, true_index = dblp_eval.find_indices(y_pred, y_true)
             self.ndcg.append(ndcg_metric(pred_index, true_index))
             self.map.append(map_metric(pred_index, true_index))
-            self.mrr.append(mrr_metric(pred_index, true_index))
 
 watchDog = watcher()
 
 def ndcg_metric(pred_index, true_index):
-    return rk.ndcg_at(pred_index, true_index, k=10)
+    return np.mean([rk.ndcg_at(pred_index, true_index, k=5), rk.ndcg_at(pred_index, true_index, k=10)])
 def map_metric(pred_index, true_index):
-    return metrics.mapk(true_index, pred_index, k=10)
-def mrr_metric(pred_index, true_index):
-    return dblp_eval.mean_reciprocal_rank(dblp_eval.cal_relevance_score(pred_index[:10], true_index))
+    return np.mean([metrics.mapk(true_index, pred_index, k=5), metrics.mapk(true_index, pred_index, k=10)])
+
 
 # fix random seed for reproducibility
 seed = 7
-recorder_step = 3
 np.random.seed(seed)
 es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=5, min_delta=1)
 
@@ -70,7 +74,7 @@ k_max = 100 #cut_off for eval
 evaluation_k_set = np.arange(1, k_max+1, 1)
 
 #nn settings
-epochs = 300
+epochs = 2000
 back_propagation_batch_size = 64
 training_batch_size = 6000
 min_skill_size = 0
@@ -225,7 +229,8 @@ for fold_counter in range(1,k_fold+1):
         autoencoder.fit(x_train, y_train,
                         epochs=epochs,
                         batch_size=back_propagation_batch_size,
-                        callbacks=[es, watchDog],
+                        # callbacks=[es, watchDog],
+                        callbacks=[watchDog],
                         shuffle=True,
                         verbose=2,
                         validation_data=(x_test,y_test))
@@ -326,7 +331,7 @@ for fold_counter in range(1,k_fold+1):
     # print('eval records are saved successfully for fold #{}'.format(fold_counter))
 
     fold_counter += 1
-    # break
+    break
 
 print('Loss for each fold: {}'.format(cvscores))
 
@@ -345,16 +350,11 @@ print('Loss for each fold: {}'.format(cvscores))
 #     with open('../misc/{}_dim{}_tf_50.pkl'.format(method_name, embedding_dim), 'wb') as f:
 #         pkl.dump(tf_score, f)
 
-intervals = []
-sum = 0
-for i, t in enumerate(watchDog.times):
-    sum += t
-    if i%recorder_step == 0:
-        intervals.append(sum)
+
 result_output_name = "../output/eval_results/{}_performance_curve.csv".format(method_name)
 with open(result_output_name, 'w') as file:
     writer = csv.writer(file)
     writer.writerow(
-        ['time (second)', 'ndcg', 'map', 'mrr'])
-    for t1,t2,t3,t4 in zip(intervals, watchDog.ndcg, watchDog.map, watchDog.mrr):
-        writer.writerow([t1, t2, t3, t4])
+        ['time (second)', 'ndcg', 'map'])
+    for t1,t2,t3 in zip(watchDog.intervals, watchDog.ndcg, watchDog.map):
+        writer.writerow([t1, t2, t3])
