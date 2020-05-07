@@ -36,7 +36,7 @@ class Team2Vec:
 
         for index, team in enumerate(teams_members):
             td = gensim.models.doc2vec.TaggedDocument([str(m) for m in team], [
-                str(teams_label[index])])  # the f*ing [] is needed to surround the tags!
+                str(teams_label[index])])  # the [] is needed to surround the tags!
             self.teams.append(td)
         print('#teams loaded: {}; member type = {}'.format(len(self.teams), member_type))
 
