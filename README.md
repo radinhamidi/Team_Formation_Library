@@ -76,4 +76,4 @@ Help Hurt diagram needs comparison of two methods. Therefore, a script [(HelpHur
 
 ## Contributing
 
-This repository is double-blidined for CIKM 2020 submission.
+This branch is submitted for CIKM 2020 conference.
