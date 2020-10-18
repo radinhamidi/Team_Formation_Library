@@ -112,7 +112,7 @@ more_train_q = input('Train more? (y/n)')
 
 time_str = time.strftime("%Y_%m_%d-%H_%M_%S")
 result_output_name = "../output/predictions/{}_output.csv".format(method_name)
-with open(result_output_name, 'w') as file:
+with open(result_output_name, 'w', newline="") as file:
     writer = csv.writer(file)
     writer.writerow(
         ['Method Name', '# Total Folds', '# Fold Number', '# Predictions', '# Truth', 'Computation Time (ms)',
@@ -239,7 +239,7 @@ for fold_counter in range(1,k_fold+1):
     x_test_1 = np.asarray([x_test_record[0].todense() for x_test_record in x_test_onehot]).reshape(x_test_onehot.__len__(), -1)
     x_test_2 = x_test_t2v
     y_test = np.asarray([y_test_record[0].todense() for y_test_record in y_test_onehot]).reshape(y_test_onehot.__len__(), -1)
-    with open(result_output_name, 'a+') as file:
+    with open(result_output_name, 'a+', newline="") as file:
         writer = csv.writer(file)
         for sample_x_1, sample_x_2, sample_y in zip(x_test_1, x_test_2, y_test):
             start_time = time.time()

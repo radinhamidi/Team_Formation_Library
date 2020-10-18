@@ -125,7 +125,7 @@ def load_T2V_model(model: Team2Vec, path='../output/Models/T2V'):
     model_names = []
     for path in glob.glob('{}/model_*'.format(path)):
         model_names.append(path)
-    print('Please enter you model number form list below:')
+    print('Please enter you model number from list below:')
     for i, path in enumerate(model_names):
         print('{}. {}'.format(i + 1, path))
     model_number = int(input('?')) - 1

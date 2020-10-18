@@ -193,11 +193,12 @@ class Team2Vec:
 
 def main_train_team2vec():
     import dal.load_dblp_data as dblp
-    if dblp.preprocessed_dataset_exist(file_path='./dataset/dblp_preprocessed_dataset.pkl'):
-        team_matrix = dblp.preprocessed_dataset_exist()
+    if dblp.preprocessed_dataset_exist():
+        team_matrix = dblp.load_preprocessed_dataset()
     else:
         dblp.extract_data(filter_journals=True)
-        team_matrix = dblp.preprocessed_dataset_exist()
+        dblp.dataset_preprocessing(dblp.load_ae_dataset(file_path='../dataset/ae_dataset.pkl'), seed=7, kfolds=10)
+        team_matrix = dblp.load_preprocessed_dataset()
 
     t2v = Team2Vec()
 
@@ -228,9 +229,9 @@ def main_train_team2vec():
             window = int(arg)
 
     t2v.init(team_matrix, member_type=member_type)
-    t2v.train(dimension=dimension, window=window, dist_mode=dm, output='./output/Models/T2V/', epochs=epochs)
-    t2v.plot_model('pca', output='./output/Figures/')
-    t2v.plot_model('tsne', output='./output/Figures/')
+    t2v.train(dimension=dimension, window=window, dist_mode=dm, output='../output/Models/T2V/', epochs=epochs)
+    t2v.plot_model('pca', output='../output/Figures/')
+    t2v.plot_model('tsne', output='../output/Figures/')
 
     # sample running string
     # python3 -u ./ml/team2vec.py -d 500 -w 2 -m 2>&1 |& tee  ./output/Team2Vec/log_d500_w2_m1.txt

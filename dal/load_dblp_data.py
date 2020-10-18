@@ -15,6 +15,7 @@ import xlwt
 import eval.evaluator as dblp_eval
 from tempfile import TemporaryFile
 from iteration_utilities import deepflatten
+from itertools import groupby
 
 
 publication_filter = ['sigmod', 'vldb', 'icde', 'icdt', 'edbt', 'pods', 'kdd', 'www',
@@ -178,7 +179,7 @@ def convert_to_pkl(txt_dir='../dataset/dblp.txt', pkl_dir='../dataset/dblp.pkl',
 
 
 # dblp to sparse matrix: output: pickle file of the sparse matrix
-def extract_data(filter_journals=False, size_limit=np.inf, skill_size_filter=0, member_size_filter=0,
+def extract_data(filter_journals=True, size_limit=np.inf, skill_size_filter=0, member_size_filter=0,
                  source_dir='../dataset/dblp.pkl', skill_dir='../dataset/invertedTermCount.txt',
                  author_dir='../dataset/authorNameId.txt', output_dir='../dataset/ae_dataset.pkl'):
     if not source_pkl_exist(file_path=source_dir):

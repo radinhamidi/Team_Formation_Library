@@ -113,7 +113,7 @@ more_train_q = input('Train more? (y/n)')
 
 time_str = time.strftime("%Y_%m_%d-%H_%M_%S")
 result_output_name = "../output/predictions/{}_output.csv".format(method_name)
-with open(result_output_name, 'w') as file:
+with open(result_output_name, 'w', newline="") as file:
     writer = csv.writer(file)
     writer.writerow(
         ['Method Name', '# Total Folds', '# Fold Number', '# Predictions', '# Truth', 'Computation Time (ms)',
@@ -237,7 +237,7 @@ for fold_counter in range(1,k_fold+1):
     print("eval on test data fold #{}".format(fold_counter))
     true_indices = []
     pred_indices = []
-    with open(result_output_name, 'a+') as file:
+    with open(result_output_name, 'a+', newline="") as file:
         writer = csv.writer(file)
         for sample_x, sample_y in zip(x_test, y_sparse_test):
             start_time = time.time()
