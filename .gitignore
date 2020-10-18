@@ -112,13 +112,13 @@ venv.bak/
 
 # For output files: ignore everythong but keep the strcuture. (gitkeep file is used to keep the structure)
 # exclude everything
-/output/*
+#/output/*
 # exception to the rule
-!output/.gitkeep
-!output/Figures/.gitkeep
-!output/Models/.gitkeep
-!output/Models/Weights/.gitkeep
-!output/Models/T2V/.gitkeep
+#!output/.gitkeep
+#!output/Figures/.gitkeep
+#!output/Models/.gitkeep
+#!output/Models/Weights/.gitkeep
+#!output/Models/T2V/.gitkeep
 
 
 /misc/*.pkl
