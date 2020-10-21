@@ -29,7 +29,7 @@ Keras
 NLTK
 ```
 ### Dataset
-We choose DBLP as the benchmark. We consider each author to represent an expert and the authors of each publication to form a team. Presumably publication keywords would be reflective of the skills required for publishing the article. But, often publications in DBLP are not associated with keywords. Thus, we form the skill set S from the set of keywords extracted from the title of the publications. You can download dataset from this [here](https://lfs.aminer.cn/lab-datasets/citation/DBLP_citation_Sep_2013.rar). Downloaded dataset should be moved to [dataset](https://github.com/DoubleBlindRepo/team_formation/dataset) folder of the repository.
+We choose DBLP as the benchmark. We consider each author to represent an expert and the authors of each publication to form a team. Presumably publication keywords would be reflective of the skills required for publishing the article. But, often publications in DBLP are not associated with keywords. Thus, we form the skill set S from the set of keywords extracted from the title of the publications. You can download dataset from this [here](https://lfs.aminer.cn/lab-datasets/citation/dblp.v8.tgz). Downloaded dataset should be moved to [dataset](https://github.com/DoubleBlindRepo/team_formation/dataset) folder of the repository.
 
 ### Preprccessing
 
