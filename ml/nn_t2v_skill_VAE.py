@@ -331,7 +331,7 @@ for fold_counter in range(1,k_fold+1):
     # print('eval records are saved successfully for fold #{}'.format(fold_counter))
 
     fold_counter += 1
-    break
+    #break
 
 print('Loss for each fold: {}'.format(cvscores))
 
