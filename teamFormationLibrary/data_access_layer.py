@@ -4,9 +4,10 @@ import os, getopt, sys, multiprocessing
 import teamFormationLibrary.dal.load_dblp_data as dblp
 
 class DataAccessLayer:
-    def __init__(self, database_name, database_path):
+    def __init__(self, database_name, database_path, embeddings_save_path='output/Models/T2V/'):
         self.database_name = database_name
         self.databasePath = database_path
+        self.embeddings_save_path = embeddings_save_path
         self.teams = []
         self.member_type = ''
 
@@ -15,6 +16,9 @@ class DataAccessLayer:
 
     def get_database_path(self):
         return self.databasePath
+
+    def embeddings_save_path(self):
+        return self.embeddings_save_path
 
     def init(self, team_matrix, member_type='user'):  # member_type={'user','skill'}
         self.member_type = member_type
@@ -34,7 +38,7 @@ class DataAccessLayer:
             self.teams.append(td)
         print('#teams loaded: {}; member type = {}'.format(len(self.teams), member_type))
 
-    def train(self, dimension=300, window=2, dist_mode=1, epochs=100, output='output/Models/T2V/'):
+    def train(self, dimension=300, window=2, dist_mode=1, epochs=100, output=embeddings_save_path):
 
         self.settings = 'd' + str(dimension) + '_w' + str(window) + '_m' + str(dist_mode) + '_t' + str(self.member_type.capitalize())
         print('training settings: %s\n' % self.settings)
@@ -160,7 +164,7 @@ class DataAccessLayer:
                     window = int(arg)
 
             self.init(team_matrix, member_type=member_type)
-            self.train(dimension=dimension, window=window, dist_mode=dm, output='output/Models/T2V/', epochs=epochs)
+            self.train(dimension=dimension, window=window, dist_mode=dm, output=self.embeddings_save_path, epochs=epochs)
 
             # sample running string
             # python3 -u ./ml/team2vec.py -d 500 -w 2 -m 2>&1 |& tee  ./output/Team2Vec/log_d500_w2_m1.txt
