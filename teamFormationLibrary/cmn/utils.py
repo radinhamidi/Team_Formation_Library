@@ -10,7 +10,7 @@ from sklearn import preprocessing
 import itertools
 import keras
 import glob
-from ml.team2vec import *
+from teamFormationLibrary.data_access_layer import DataAccessLayer
 
 
 def crossValidate(data: np.ndarray, split1, split2):
@@ -121,7 +121,7 @@ def pick_model_weights(model: keras.models.Model, dataset_name, path='../output/
     return model
 
 
-def load_T2V_model(model: Team2Vec, path='../output/Models/T2V'):
+def load_T2V_model(model: DataAccessLayer, path='../output/Models/T2V'):
     model_names = []
     for path in glob.glob('{}/model_*'.format(path)):
         model_names.append(path)

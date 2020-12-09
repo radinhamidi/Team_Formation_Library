@@ -1,5 +1,6 @@
 import os
 
+from teamFormationLibrary.VAE import VAE
 from teamFormationLibrary.data_access_layer import DataAccessLayer
 
 
@@ -22,11 +23,16 @@ def main_team_formation():
         embeddings_save_path = input("This path does not exist. Please enter a "
                                      "valid path: ")
 
+    #1
     if embeddings_save_path == 'default':
-        DAL = DataAccessLayer(database_name, database_path)
+        t2v_model = DataAccessLayer(database_name, database_path)
     else:
-        DAL = DataAccessLayer(database_name, database_path, embeddings_save_path)
-    DAL.pre_process_data()
+        t2v_model = DataAccessLayer(database_name, database_path, embeddings_save_path)
+    t2v_model.pre_process_data()
+
+    #2
+    t2v_model = VAE(t2v_model, database_path)
+    t2v_model.VAE()
 
 
 # Press the green button in the gutter to run the script.

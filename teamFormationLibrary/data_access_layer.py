@@ -3,6 +3,7 @@ import os, getopt, sys, multiprocessing
 
 import teamFormationLibrary.dal.load_dblp_data as dblp
 
+
 class DataAccessLayer:
     def __init__(self, database_name, database_path, embeddings_save_path='output/Models/T2V/'):
         self.database_name = database_name
@@ -133,8 +134,12 @@ class DataAccessLayer:
         return iv, self.model.docvecs.most_similar([iv])
 
     def pre_process_data(self):
+        min_skill_size = 0
+        min_member_size = 0
+
         if dblp.preprocessed_dataset_exist(self.databasePath):
             team_matrix = dblp.load_preprocessed_dataset(self.databasePath) #added this
+            dblp.extract_data(filter_journals=True, skill_size_filter=min_skill_size, member_size_filter=min_member_size)
 
             help_str = 'team2vec.py [-m] [-s] [-d <dimension=100>] [-e <epochs=100>] [-w <window=2>] \n-m: distributed memory mode; default=distributed bag of members\n-s: member type = skill; default = user'
             try:
