@@ -4,7 +4,7 @@ from scipy import sparse
 import pandas
 from collections import Counter
 import numpy as np
-import pickle as pkl
+import pickle
 from sklearn.feature_extraction.text import TfidfVectorizer
 from nltk.tokenize import word_tokenize, RegexpTokenizer
 from nltk.stem.porter import PorterStemmer

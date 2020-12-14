@@ -24,40 +24,6 @@ import teamFormationLibrary.eval.ranking as rk
 import ml_metrics as metrics
 from teamFormationLibrary.cmn.variational import *
 
-class watcher(Callback):
-    def on_train_begin(self, logs={}):
-        self.intervals = []
-        self.ndcg = []
-        self.map = []
-        self.sum = 0
-
-    def on_epoch_begin(self, epoch, logs={}):
-        self.epoch_time_start = time.time()
-
-    def on_epoch_end(self, epoch, logs={}):
-        self.sum += time.time() - self.epoch_time_start
-        if epoch < 30:
-            recorder_step = 5
-        elif epoch < 300:
-            recorder_step = 50
-        else:
-            recorder_step = 150
-        if epoch%recorder_step == 0:
-            self.intervals.append(self.sum)
-            self.sum = 0
-            y_true = y_test
-            y_pred = autoencoder.predict(x_test)
-            pred_index, true_index = dblp_eval.find_indices(y_pred, y_true)
-            self.ndcg.append(self.ndcg_metric(pred_index, true_index))
-            self.map.append(self.map_metric(pred_index, true_index))
-
-    def ndcg_metric(pred_index, true_index):
-        return np.mean([rk.ndcg_at(pred_index, true_index, k=5), rk.ndcg_at(pred_index, true_index, k=10)])
-    def map_metric(pred_index, true_index):
-        return np.mean([metrics.mapk(true_index, pred_index, k=5), metrics.mapk(true_index, pred_index, k=10)])
-
-watchDog = watcher()
-
 
 class VAE:
     def __init__(self, t2v_model, database_path):
