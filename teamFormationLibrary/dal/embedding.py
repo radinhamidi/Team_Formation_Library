@@ -22,6 +22,17 @@ class Embedding:
         return self.embeddings_save_path
 
     def init(self, team_matrix, member_type='user'):  # member_type={'user','skill'}
+        """Initialize embedding model
+        Extract user/skills indices from the database to create an embedding
+        model that wll be used for training
+        Parameters
+        ----------
+        team_matrix : array-like, shape=(n_teams,)
+            The team_matrix array. The combination of users and skills that
+            makes up each team in the database
+        member_type : string
+            The type of embedding to be computed ('user' or 'skill')
+        """
         self.member_type = member_type
         teams_label = []
         # teams_skils = []
@@ -40,7 +51,23 @@ class Embedding:
         print('#teams loaded: {}; member type = {}'.format(len(self.teams), member_type))
 
     def train(self, dimension=300, window=2, dist_mode=1, epochs=100, output=embeddings_save_path):
-
+        """Train the teams that were previously generated
+        Train user/skill teams and save in vector format
+        Parameters
+        ----------
+        dimension : int
+            The dimensionality of the word vectors
+        window : int
+            The maximum distance between the current and predicted word
+            within a sentence.
+        dist_mode : int
+            Whether to choose distributed memory or bag of words for the
+            embedding
+        epochs : int
+            The number of iteration over the corpus
+        output : string
+            The local path where the embeddings will be saved
+        """
         self.settings = 'd' + str(dimension) + '_w' + str(window) + '_m' + str(dist_mode) + '_t' + str(self.member_type.capitalize())
         print('training settings: %s\n' % self.settings)
 
@@ -134,6 +161,10 @@ class Embedding:
         return iv, self.model.docvecs.most_similar([iv])
 
     def generate_embeddings(self):
+        """Generate embeddings for the provided database
+        Utilize init and train methods to generate user/
+        skill embeddings
+        """
         min_skill_size = 0
         min_member_size = 0
 

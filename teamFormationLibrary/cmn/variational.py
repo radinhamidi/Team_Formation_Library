@@ -5,6 +5,7 @@ import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
 
+# tf.config.run_functions_eagerly(False)
 
 class DenseVariational(Layer):
     def __init__(self,
