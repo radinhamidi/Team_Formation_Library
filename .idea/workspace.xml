@@ -2,30 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="83bb8fa4-3a42-4b46-84f2-60e4d1eb0ebf" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/teamFormationLibrary/dal/test_indices.csv" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/teamFormationLibrary/dal/train_indices.csv" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/teamFormationLibrary/dataset/ae_t2v_dim100_tSkill_dataset.pkl" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/teamFormationLibrary/eval/evaluation.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/teamFormationLibrary/output/diagrams/metric_fig.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/teamFormationLibrary/output/predictions/S_VAE_O_output.csv" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/teamFormationLibrary/output/predictions/S_VAE_O_output_2.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/teamFormationLibrary/VAE.py" beforeDir="false" afterPath="$PROJECT_DIR$/teamFormationLibrary/VAE.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/teamFormationLibrary/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/teamFormationLibrary/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/teamFormationLibrary/__main__.py" beforeDir="false" afterPath="$PROJECT_DIR$/teamFormationLibrary/__main__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/teamFormationLibrary/cmn/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/teamFormationLibrary/cmn/utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/teamFormationLibrary/cmn/variational.py" beforeDir="false" afterPath="$PROJECT_DIR$/teamFormationLibrary/cmn/variational.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/teamFormationLibrary/dal/embedding.py" beforeDir="false" afterPath="$PROJECT_DIR$/teamFormationLibrary/dal/embedding.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/teamFormationLibrary/dal/load_dblp_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/teamFormationLibrary/dal/load_dblp_data.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/teamFormationLibrary/data_access_layer.py" beforeDir="false" afterPath="$PROJECT_DIR$/teamFormationLibrary/data_access_layer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/teamFormationLibrary/eval/HelpHurt.py" beforeDir="false" afterPath="$PROJECT_DIR$/teamFormationLibrary/eval/HelpHurt.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/teamFormationLibrary/eval/comparison.py" beforeDir="false" afterPath="$PROJECT_DIR$/teamFormationLibrary/eval/comparison.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/teamFormationLibrary/eval/evaluator.py" beforeDir="false" afterPath="$PROJECT_DIR$/teamFormationLibrary/eval/evaluator.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/teamFormationLibrary/eval/ranking.py" beforeDir="false" afterPath="$PROJECT_DIR$/teamFormationLibrary/eval/ranking.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/teamFormationLibrary/output/Models/T2V/members2vec_d100_w2_m0_tSkill" beforeDir="false" afterPath="$PROJECT_DIR$/teamFormationLibrary/output/Models/T2V/members2vec_d100_w2_m0_tSkill" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/teamFormationLibrary/output/Models/T2V/model_d100_w2_m0_tSkill" beforeDir="false" afterPath="$PROJECT_DIR$/teamFormationLibrary/output/Models/T2V/model_d100_w2_m0_tSkill" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/teamFormationLibrary/output/Models/T2V/team2vec_d100_w2_m0_tSkill" beforeDir="false" afterPath="$PROJECT_DIR$/teamFormationLibrary/output/Models/T2V/team2vec_d100_w2_m0_tSkill" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

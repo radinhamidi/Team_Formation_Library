@@ -130,4 +130,4 @@ venv.bak/
 
 # Big Files:
 teamFormationLibrary/output/Models/T2V/team2vec_d100_w2_m0_tSkill
-teamFormationLibrary/dataset/dblp_preprocessed_dataset.pkl
+teamFormationLibrary/dataset/ae_t2v_dim100_tSkill_dataset.pkl
