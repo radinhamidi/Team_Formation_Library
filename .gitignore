@@ -105,29 +105,29 @@ venv.bak/
 
 # For Data files: ignore everythong but keep the strcuture. (gitkeep file is used to keep the structure)
 # exclude everything
-/dataset/*
+teamFormationLibrary/dataset/*
 # exception to the rule
-!dataset/.gitkeep
-!dataset/ae_dataset.pkl
+!teamFormationLibrary/dataset/.gitkeep
+!teamFormationLibrary/dataset/ae_dataset.pkl
 
 # For output files: ignore everythong but keep the strcuture. (gitkeep file is used to keep the structure)
 # exclude everything
 #/output/*
 # exception to the rule
-#!output/.gitkeep
-#!output/Figures/.gitkeep
-#!output/Models/.gitkeep
-#!output/Models/Weights/.gitkeep
-#!output/Models/T2V/.gitkeep
+#!teamFormationLibrary/output/.gitkeep
+#!teamFormationLibrary/output/Figures/.gitkeep
+#!teamFormationLibrary/output/Models/.gitkeep
+#!teamFormationLibrary/output/Models/Weights/.gitkeep
+#!teamFormationLibrary/output/Models/T2V/.gitkeep
 
 
-/misc/*.pkl
-/misc/*.h5
+teamFormationLibrary/misc/*.pkl
+teamFormationLibrary/misc/*.h5
 
 .idea/misc.xml
 .idea/inspectionProfiles/Project_Default.xml
 .idea/Team Formation.iml
 
-# Big Files:
-teamFormationLibrary/output/Models/T2V/team2vec_d100_w2_m0_tSkill
-teamFormationLibrary/dataset/ae_t2v_dim100_tSkill_dataset.pkl
+# Big Files (done above):
+# teamFormationLibrary/output/Models/T2V/team2vec_d100_w2_m0_tSkill
+# teamFormationLibrary/dataset/ae_t2v_dim100_tSkill_dataset.pkl
