@@ -1,6 +1,3 @@
-import os
-
-# from teamFormationLibrary.VAE import VAE
 from teamFormationLibrary.data_access_layer import DataAccessLayer
 
 
@@ -35,9 +32,9 @@ def main_team_formation():
     # 3 - Split the dataset into train and test sets
     DAL.train_test_split_data()
     # 4 - Pass the data through the VAE
-    #DAL.generate_VAE()
+    DAL.generate_VAE()
     # 5 - Evaluate the results
-    #DAL.evaluate_results("output/predictions/S_VAE_O_output.csv", "output/predictions/S_VAE_O_output_2.csv", 50, True)
+    DAL.evaluate_results("output/predictions/S_VAE_O_output.csv", "output/predictions/S_VAE_O_output_2.csv", 50, True)
 
 
 # Press the green button in the gutter to run the script.

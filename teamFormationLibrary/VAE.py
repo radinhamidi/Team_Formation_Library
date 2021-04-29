@@ -1,19 +1,14 @@
-from teamFormationLibrary.dal.load_dblp_data import nn_t2v_dataset_generator
-import teamFormationLibrary.cmn.utils as utils
 from teamFormationLibrary.cmn.variational import *
-import teamFormationLibrary.dal.load_dblp_data as dblp
-
-import time
-import csv
-
 import teamFormationLibrary.eval.evaluator as dblp_eval
 
-from keras.losses import mse, binary_crossentropy, mae, kld, categorical_crossentropy
+from keras.losses import mse
 from keras.layers import Lambda
 from keras.layers import Input, Dense
 from keras.models import Model
 from keras.callbacks import EarlyStopping
-from contextlib import redirect_stdout
+
+import time
+import csv
 
 
 # fix random seed for reproducibility
@@ -26,7 +21,6 @@ dataset_name = 'DBLP'
 method_name = 'S_VAE_O'
 
 # eval settings
-
 k_max = 100  # cut_off for eval
 evaluation_k_set = np.arange(1, k_max+1, 1)
 
@@ -138,7 +132,7 @@ class VAE:
         pred_indices = []
 
         result_output_name = "output/predictions/{}_output.csv".format(method_name)
-        with open(result_output_name, 'a+', newline="") as file:
+        with open(result_output_name, 'w', newline="") as file:
             writer = csv.writer(file)
             writer.writerow(
                 ['Method Name', '# Predictions', '# Truth', 'Computation Time (ms)',

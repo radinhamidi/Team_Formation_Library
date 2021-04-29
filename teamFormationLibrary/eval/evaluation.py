@@ -1,10 +1,7 @@
-import gensim, numpy as np, matplotlib.pyplot as pl, pylab, random, pickle
-import os, getopt, sys, multiprocessing
-
-import csv
-
-import teamFormationLibrary.dal.load_dblp_data as dblp
 import teamFormationLibrary.eval.ranking as ranking
+
+import numpy as np, matplotlib.pyplot as pl
+import csv
 
 
 class Evaluation:
@@ -89,15 +86,6 @@ class Evaluation:
         print("")
 
     def metric_visualization(self, max_k, save_graphs):
-        """Create metric visualization plots for each metric
-        Create metric visualization plots using matplotlib subplot
-        Parameters
-        ----------
-        max_k : int
-            The top k of predictions to perform evaluation on
-        save_graphs : int, optional (default=False)
-            Whether to save the evaluation plots or not
-        """
         x = np.arange(0, max_k + 1, max_k/min(max_k, 10), dtype=int)[1:]
         # print(x)
         recall = []

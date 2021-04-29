@@ -105,6 +105,7 @@ venv.bak/
 
 # For Data files: ignore everythong but keep the strcuture. (gitkeep file is used to keep the structure)
 # exclude everything
+teamFormationLibrary/output/Models/T2V/team2vec_d100_w2_m0_tSkill
 teamFormationLibrary/dataset/*
 # exception to the rule
 !teamFormationLibrary/dataset/.gitkeep

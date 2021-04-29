@@ -1,22 +1,8 @@
-import csv
 from os import path
-from scipy import sparse
 import pandas
-from collections import Counter
-import numpy as np
 import pickle
-from sklearn.feature_extraction.text import TfidfVectorizer
-from nltk.tokenize import word_tokenize, RegexpTokenizer
-from nltk.stem.porter import PorterStemmer
-from nltk.corpus import stopwords
-import pandas as pd
-from teamFormationLibrary.data_access_layer import * #replaced
-import matplotlib.pyplot as plt
-import xlwt
+from teamFormationLibrary.data_access_layer import *
 import teamFormationLibrary.eval.evaluator as dblp_eval
-from tempfile import TemporaryFile
-from iteration_utilities import deepflatten
-from itertools import groupby
 
 
 def get_user_skill_dict(data):

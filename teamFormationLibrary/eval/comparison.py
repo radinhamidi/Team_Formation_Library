@@ -1,9 +1,9 @@
 import csv
 import numpy as np
-import eval.ranking as rk
+import teamFormationLibrary.eval.ranking as rk
 import ml_metrics as metrics
-import dal.load_dblp_data as dblp
-import eval.evaluator as dblp_eval
+import teamFormationLibrary.dal.load_dblp_data as dblp
+import teamFormationLibrary.eval.evaluator as dblp_eval
 
 user_HIndex = dblp.get_user_HIndex()
 user_skill_dict = dblp.get_user_skill_dict(dblp.load_preprocessed_dataset())
