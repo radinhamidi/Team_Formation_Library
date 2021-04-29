@@ -110,6 +110,7 @@ teamFormationLibrary/dataset/*
 # exception to the rule
 !teamFormationLibrary/dataset/.gitkeep
 !teamFormationLibrary/dataset/ae_dataset.pkl
+!teamFormationLibrary/dataset/README_DATASET.md
 
 # For output files: ignore everythong but keep the strcuture. (gitkeep file is used to keep the structure)
 # exclude everything
@@ -133,5 +134,3 @@ teamFormationLibrary/misc/*.h5
 # Big Files (done above):
 # teamFormationLibrary/output/Models/T2V/team2vec_d100_w2_m0_tSkill
 # teamFormationLibrary/dataset/ae_t2v_dim100_tSkill_dataset.pkl
-
-.idea/shelf/*
