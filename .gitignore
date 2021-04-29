@@ -125,6 +125,7 @@ teamFormationLibrary/dataset/*
 teamFormationLibrary/misc/*.pkl
 teamFormationLibrary/misc/*.h5
 
+
 .idea/misc.xml
 .idea/inspectionProfiles/Project_Default.xml
 .idea/Team Formation.iml
@@ -132,3 +133,5 @@ teamFormationLibrary/misc/*.h5
 # Big Files (done above):
 # teamFormationLibrary/output/Models/T2V/team2vec_d100_w2_m0_tSkill
 # teamFormationLibrary/dataset/ae_t2v_dim100_tSkill_dataset.pkl
+
+.idea/shelf/*
