@@ -12,6 +12,8 @@ class Evaluation:
         self.k = 10
 
     def get_database_name(self):
+        """Returns the database name provided by the user
+        """
         return self.results_path
 
     def split_predicted_true_indices(self):
@@ -33,6 +35,8 @@ class Evaluation:
         # print(self.true_indices)
 
     def get_predicted_indices(self):
+        """Returns the predicted indices determined by the VAE
+        """
         return self.predicted_indices
 
     def r_at_k(self):
@@ -86,6 +90,16 @@ class Evaluation:
         print("")
 
     def metric_visualization(self, max_k, save_graphs):
+        """Generate metric visualizations
+        Generates visualizations for various different metric
+        measures including recall, mrr, map, and ndcg
+        Parameters
+        ----------
+        max_k : integer
+            The upper limit on the top-k for the evaluation
+        save_graphs : boolean
+            Whether to save the graphs or not
+        """
         x = np.arange(0, max_k + 1, max_k/min(max_k, 10), dtype=int)[1:]
         # print(x)
         recall = []

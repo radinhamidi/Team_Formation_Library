@@ -6,9 +6,11 @@ Furthermore, diagrams can also be generated to display metric
 performance.
  
 Example of usage:
-- r_at_k() #to compute recall
-- mean_reciprocal_rank() #to compute MRR
-- print_metrics() #to print the above metrics along with others
-- metric_visualization() #generate metric performance diagrams
-- correlation() #compute the correlation between two models
-- save_metric_visualization() #save diagrams to a local location
+```python
+r_at_k() #to compute recall
+mean_reciprocal_rank() #to compute MRR
+print_metrics() #to print the above metrics along with others
+metric_visualization() #generate metric performance diagrams
+correlation() #compute the correlation between two models
+save_metric_visualization() #save diagrams to a local location
+```

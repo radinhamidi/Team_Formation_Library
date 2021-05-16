@@ -132,49 +132,14 @@ class Embedding:
             self.model.docvecs.save_word2vec_format('{}team2vec_{}'.format(output, self.settings))
             print('Model saved for {} under directory {}'.format(self.settings, output))
 
-    def get_teams(self):
-        return self.model.docvecs.doctags
-
-    def get_members(self):
-        return self.model.wv.vocab
-
-    def get_team_members(self, tid):
-        return [int(m) for t in self.teams if str(tid) in t.tags for m in t.words]
-
-    def get_member_vec(self, mid):
-        return self.model[str(mid)]
-
     def get_team_vec(self, tid):
         return self.model.docvecs[str(tid)]
-
-    def get_member_similarity(self, m1, m2):
-        return self.model.wv.similarity(str(m1), str(m2))
-
-    def get_team_similarity(self, t1, t2):
-        return self.model.docvecs.similarity(str(t1), str(t2))
-
-    def get_team_most_similar(self, tid, topn=10):
-        return self.model.docvecs.most_similar(str(tid), topn=topn)
 
     def load_model(self, modelfile, includeTeams=False):
         self.model = gensim.models.Doc2Vec.load(modelfile) # load the doc2vec model
         if includeTeams:
             with open(modelfile.replace('model', 'teams'), 'rb') as f:
                 self.teams = pickle.load(f)
-
-    def get_member_most_similar_by_vector(self, mvec, topn=10):
-        similar_list = self.model.wv.similar_by_vector(mvec, topn=topn)  # is it sorted?
-        similar_list.sort(key=lambda x: x[1], reverse=True)  # now it is sorted :)
-        return similar_list
-
-    def get_team_most_similar_by_vector(self, tvec, topn=10):
-        similar_list = self.model.similar_by_vector(tvec, topn=topn)  # is it sorted?
-        similar_list.sort(key=lambda x: x[1], reverse=True)  # now it is sorted :)
-        return similar_list
-
-    def infer_team_vector(self, members):
-        iv = self.model.infer_vector(members)
-        return iv, self.model.docvecs.most_similar([iv])
 
     def generate_embeddings(self):
         """Generate embeddings for the provided database
@@ -185,7 +150,7 @@ class Embedding:
         min_member_size = 0
 
         if dblp.preprocessed_dataset_exist(self.databasePath):
-            team_matrix = dblp.load_preprocessed_dataset(self.databasePath) # load the preprocessed dataset
+            team_matrix = dblp.load_preprocessed_dataset(self.databasePath)  # load the preprocessed dataset
 
             help_str = 'team2vec.py [-m] [-s] [-d <dimension=100>] [-e <epochs=100>] [-w <window=2>] \n-m: distributed memory mode; default=distributed bag of members\n-s: member type = skill; default = user'
             try:
@@ -216,6 +181,8 @@ class Embedding:
 
             self.init(team_matrix, member_type=member_type)
             self.train(dimension=dimension, window=window, dist_mode=dm, output=self.embeddings_save_path, epochs=epochs)
+            return True
 
         else:
             print("The preprocessed database provided does not exist!")
+            return False

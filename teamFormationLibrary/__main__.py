@@ -26,9 +26,9 @@ def main_team_formation():
     # Create an instance of the DataAccessLayer
     DAL = DataAccessLayer(database_name, database_path, embeddings_save_path)
     # 1 - Generate dictionaries and embedding files
-    # DAL.generate_embeddings()
+    #DAL.generate_embeddings()
     # 2 - Create vectors to associate ids, teams, and skills
-    # DAL.generate_t2v_dataset()
+    #DAL.generate_t2v_dataset()
     # 3 - Split the dataset into train and test sets
     DAL.train_test_split_data()
     # 4 - Pass the data through the VAE

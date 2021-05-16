@@ -28,11 +28,11 @@ large DBLP dataset.
 ## Getting Started
 
 These instructions will get you the Team Formation PyPI library installed on your 
-machine and you will be able to use its features in a python co,piler.
+machine and you will be able to use its features in a python compiler.
 
 ### Prerequisites
 
-What things you need to install: the software and how to install them
+These are the python libraries you need to pre-install before using this package.
 
 ```
 Python 3.6 (or higher)
@@ -63,11 +63,11 @@ fashion to perform team formation.
 
 ### Preprocessing
 
-Before starting the project you may need to preproccess  the DBLP dataset to create the author-skill and team-skill mappings.
+Before starting the project you would need to preprocess your dataset to create the author-skill and team-skill mappings.
 
 ### Output files
 
-[Output](/output) directory stores following data inside.
+[Output](/teamFormationLibrary/output) directory stores following data inside.
 - Model snapshots 
 - Predictions
 - Evaluation results
@@ -76,20 +76,18 @@ At the end of running session of each model, user will be asked wether if he/she
 Also, after running a model, predictions for the test set will be saved into the output folder for the futhur comparison.  You can find final evaluation results for each model in ".csv" individualy. They will be stored in folder.
 
 ## Evaluation
-Evaluation of predicted files is done these metrics:
+Evaluation of predicted files is done using the following metrics:
 
-- Coverage @k
+- Recall @k
 - NDCG @k
 - MAP @k
 - MRR @k
 
-In order to evaluate predicted oputputs, you need to run the 
-[comparison.py](https://github.com/DoubleBlindRepo/team_formation/eval/comparison.py)  file in [eval](https://github.com/DoubleBlindRepo/team_formation/eval) directory will calculate metrics for each model and will save the scores in the [output](https://github.com/DoubleBlindRepo/team_formation/output) 
- directory in ".csv" format.  
+The following diagram is a performance evaluation on the DBLP dataset.
 <p align="center">
-  <img width="320" height="140" src="https://i.imgur.com/993AYVt.png">
+  <img width="320" height="240" src="https://i.ibb.co/6yN20PF/metric-fig.png">
 </p>
 
 ## Contributing
 
-This branch is submitted for CIKM 2020 conference.
+This branch is submitted as a public library on the PyPI API.

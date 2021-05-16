@@ -63,8 +63,8 @@ class DataAccessLayer:
             self.embedding_model = Embedding(self.database_name, self.database_path)
         else:
             self.embedding_model = Embedding(self.database_name, self.database_path, self.embeddings_save_path)
-        self.embedding_model.generate_embeddings()
-        print("Embeddings generation is complete")
+        if self.embedding_model.generate_embeddings():
+            print("Embeddings generation is complete.")
         print("")
 
     def get_x_train_data(self):
@@ -115,7 +115,7 @@ class DataAccessLayer:
 
         # write train indices to local file
         # opening the csv file in 'w' mode
-        file = open('output/train_test_indices/train_indices.csv', 'w', newline='')
+        file = open('output/train_test_indices/train_indices.csv', 'w+', newline='')
         with file:
             writer = csv.writer(file)
             writer.writerow(["train_indices"])
@@ -125,7 +125,7 @@ class DataAccessLayer:
 
         # write test indices to local files
         # opening the csv file in 'w' mode
-        file = open('output/train_test_indices/test_indices.csv', 'w', newline='')
+        file = open('output/train_test_indices/test_indices.csv', 'w+', newline='')
         with file:
             writer = csv.writer(file)
             writer.writerow(["test_indices"])
