@@ -90,4 +90,4 @@ The following diagram is a performance evaluation on the DBLP dataset.
 
 ## Contributing
 
-This branch is submitted as a public library on the PyPI API.
+This branch is submitted as a public library package on the PyPI API.
