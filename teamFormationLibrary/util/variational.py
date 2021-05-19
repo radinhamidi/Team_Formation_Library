@@ -28,9 +28,26 @@ class DenseVariational(Layer):
         super().__init__(**kwargs)
 
     def compute_output_shape(self, input_shape):
+        """Computes the output shape
+        Computes the out put shape of the custom dense layer given
+        the input shape
+        Parameters
+        ----------
+        input_shape : integer
+            The input shape of the data before passing through the
+            custom dense layer
+        """
         return input_shape[0], self.units
 
     def build(self, input_shape):
+        """Builds the model
+        Builds the custom denser variational model
+        Parameters
+        ----------
+        input_shape : integer
+            The input shape of the data before passing through the
+            custom dense layer
+        """
         self.kernel_mu = self.add_weight(name='kernel_mu',
                                          shape=(input_shape[1], self.units),
                                          initializer=initializers.normal(stddev=self.init_sigma),
@@ -50,6 +67,12 @@ class DenseVariational(Layer):
         super().build(input_shape)
 
     def call(self, inputs, **kwargs):
+        """Calls the tensorflow functions for neural computations
+        Parameters
+        ----------
+        inputs : array-like, shape=(inputs,)
+            The input weights of the data
+        """
         kernel_sigma = tf.math.softplus(self.kernel_rho)
         kernel = self.kernel_mu + kernel_sigma * tf.random.normal(self.kernel_mu.shape)
 
@@ -62,10 +85,27 @@ class DenseVariational(Layer):
         return self.activation(K.dot(inputs, kernel) + bias)
 
     def kl_loss(self, w, mu, sigma):
+        """Computes the kullback-leibler loss
+        Computes KL-loss given certain parameters
+        Parameters
+        ----------
+        w : array-like, shape=(w,)
+            The list of weights associated with the data
+        mu : double
+            The mu parameter for the KL-loss
+        sigma: double
+            The sigma parameter for the KL-loss
+        """
         variational_dist = tfp.distributions.Normal(mu, sigma)
         return self.kl_weight * K.sum(variational_dist.log_prob(w) - self.log_prior_prob(w))
 
     def log_prior_prob(self, w):
+        """Logs the prior probabilities
+        Parameters
+        ----------
+        w : array-like, shape=(w,)
+            The list of weights associated of the prior data
+        """
         comp_1_dist = tfp.distributions.Normal(0.0, self.prior_sigma_1)
         comp_2_dist = tfp.distributions.Normal(0.0, self.prior_sigma_2)
         return K.log(self.prior_pi_1 * comp_1_dist.prob(w) +

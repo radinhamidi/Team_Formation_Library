@@ -89,7 +89,7 @@ The following diagram is a performance evaluation on the DBLP dataset.
 </p>
 
 ## End-to-end library dataflow
-The following data flow can be tested and run using the script in [Example.py](/teamFormationLibrary/example.py)
+The following data flow can be tested and run using the script in [example.py](/teamFormationLibrary/example.py)
 ```python
     # Create an instance of the TeamFormationLayer
     TFL = TeamFormationLayer(database_name, database_path, embeddings_save_path)
