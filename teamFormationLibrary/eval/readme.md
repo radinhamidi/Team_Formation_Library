@@ -1,4 +1,4 @@
-# EVAL Folder
+# Evaluation Folder
 This folder contains various classes and functions to evaluate the 
 performance of the model through metrics including: Recall, MRR, MAP,
 and NDCG. It can also compute correlations with other models. 
