@@ -1,4 +1,4 @@
-from teamFormationLibrary.data_access_layer import DataAccessLayer
+from teamFormationLibrary.TFL import TeamFormationLayer
 
 
 def main_team_formation():
@@ -23,18 +23,18 @@ def main_team_formation():
                                  "valid path: ")
     '''
 
-    # Create an instance of the DataAccessLayer
-    DAL = DataAccessLayer(database_name, database_path, embeddings_save_path)
+    # Create an instance of the TeamFormationLayer
+    TFL = TeamFormationLayer(database_name, database_path, embeddings_save_path)
     # 1 - Generate dictionaries and embedding files
-    #DAL.generate_embeddings()
+    #TFL.generate_embeddings()
     # 2 - Create vectors to associate ids, teams, and skills
-    #DAL.generate_t2v_dataset()
+    #TFL.generate_t2v_dataset()
     # 3 - Split the dataset into train and test sets
-    DAL.train_test_split_data()
+    # TFL.train_test_split_data()
     # 4 - Pass the data through the VAE
-    DAL.generate_VAE()
+    # TFL.generate_VAE()
     # 5 - Evaluate the results
-    DAL.evaluate_results("output/predictions/S_VAE_O_output.csv", "output/predictions/S_VAE_O_output_2.csv", 50, True)
+    TFL.evaluate_results("output/predictions/S_VAE_O_output.csv", "output/predictions/S_VAE_O_output_2.csv", 50, True)
 
 
 # Press the green button in the gutter to run the script.

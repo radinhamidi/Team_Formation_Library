@@ -1,7 +1,7 @@
 from os import path
 import pandas
 import pickle
-from teamFormationLibrary.data_access_layer import *
+from teamFormationLibrary.TFL import *
 import teamFormationLibrary.eval.evaluator as dblp_eval
 
 

@@ -1,5 +1,5 @@
 # CMN Folder
-This folder contains some commonly used variables, functions, and libraries that
+This folder contains the implementation of the custom dense variational layer, functions, and libraries that
 are used throughout the rest of the package.
 
 Example of usage:

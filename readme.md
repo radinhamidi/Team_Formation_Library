@@ -20,7 +20,7 @@ representation and more accurate team composition.
 
 The PyPI python library implements the above-mentioned functionality by pipe-lining its architecture into stages that 
 use classes and functions to maintain a fluid data flow.
-The pipeline consists of 5 stages that are as follows: (1) data access layer instantiation; (2) dictionaries/embeddings 
+The pipeline consists of 5 stages that are as follows: (1) team formation layer instantiation; (2) dictionaries/embeddings 
 generation; (3) train/test dataset split; (4) VAE learning; and, (5) performance evaluation. We empirically demonstrate 
 how our proposed model outperforms the state-of-the-art approaches in terms of effectiveness and efficiency based on a 
 large DBLP dataset.
