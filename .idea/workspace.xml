@@ -3,10 +3,9 @@
   <component name="ChangeListManager">
     <list default="true" id="83bb8fa4-3a42-4b46-84f2-60e4d1eb0ebf" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/teamFormationLibrary/dal/embedding.py" beforeDir="false" afterPath="$PROJECT_DIR$/teamFormationLibrary/dal/embedding.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/teamFormationLibrary/dal/load_dblp_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/teamFormationLibrary/dal/load_dblp_data.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/teamFormationLibrary/eval/evaluator.py" beforeDir="false" afterPath="$PROJECT_DIR$/teamFormationLibrary/eval/evaluator.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/teamFormationLibrary/util/readme.md" beforeDir="false" afterPath="$PROJECT_DIR$/teamFormationLibrary/util/readme.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/readme.md" beforeDir="false" afterPath="$PROJECT_DIR$/readme.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/teamFormationLibrary/__main__.py" beforeDir="false" afterPath="$PROJECT_DIR$/teamFormationLibrary/__main__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/teamFormationLibrary/output/predictions/S_VAE_O_output_2.csv" beforeDir="false" afterPath="$PROJECT_DIR$/teamFormationLibrary/output/predictions/correlation_baseline_output.csv" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -45,7 +44,7 @@
     <property name="settings.editor.selected.configurable" value="preferences.keymap" />
     <property name="show.migrate.to.gradle.popup" value="false" />
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Python.example">
     <configuration name="__main__" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="teamFormationLibrary" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -68,8 +67,52 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="evaluation" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="teamFormationLibrary" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/teamFormationLibrary/eval" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/teamFormationLibrary/eval/evaluation.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="example" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="teamFormationLibrary" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/teamFormationLibrary" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/teamFormationLibrary/example.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.example" />
+        <item itemvalue="Python.evaluation" />
         <item itemvalue="Python.__main__" />
         <item itemvalue="Python.__main__" />
       </list>
@@ -110,30 +153,30 @@
       <screen x="0" y="0" width="1536" height="824" />
     </state>
     <state x="223" y="67" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1536.824/-1920.0.1920.1040@0.0.1536.824" timestamp="1621194437635" />
-    <state width="1493" height="114" key="GridCell.Tab.0.bottom" timestamp="1621392878669">
+    <state width="1493" height="200" key="GridCell.Tab.0.bottom" timestamp="1621459849582">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state width="1493" height="114" key="GridCell.Tab.0.bottom/0.0.1536.824/-1920.0.1920.1040@0.0.1536.824" timestamp="1621392878669" />
-    <state width="1493" height="114" key="GridCell.Tab.0.center" timestamp="1621392878669">
+    <state width="1493" height="200" key="GridCell.Tab.0.bottom/0.0.1536.824/-1920.0.1920.1040@0.0.1536.824" timestamp="1621459849582" />
+    <state width="1493" height="200" key="GridCell.Tab.0.center" timestamp="1621459849582">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state width="1493" height="114" key="GridCell.Tab.0.center/0.0.1536.824/-1920.0.1920.1040@0.0.1536.824" timestamp="1621392878669" />
-    <state width="1493" height="114" key="GridCell.Tab.0.left" timestamp="1621392878668">
+    <state width="1493" height="200" key="GridCell.Tab.0.center/0.0.1536.824/-1920.0.1920.1040@0.0.1536.824" timestamp="1621459849582" />
+    <state width="1493" height="200" key="GridCell.Tab.0.left" timestamp="1621459849582">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state width="1493" height="114" key="GridCell.Tab.0.left/0.0.1536.824/-1920.0.1920.1040@0.0.1536.824" timestamp="1621392878668" />
-    <state width="1493" height="114" key="GridCell.Tab.0.right" timestamp="1621392878669">
+    <state width="1493" height="200" key="GridCell.Tab.0.left/0.0.1536.824/-1920.0.1920.1040@0.0.1536.824" timestamp="1621459849582" />
+    <state width="1493" height="200" key="GridCell.Tab.0.right" timestamp="1621459849582">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state width="1493" height="114" key="GridCell.Tab.0.right/0.0.1536.824/-1920.0.1920.1040@0.0.1536.824" timestamp="1621392878669" />
+    <state width="1493" height="200" key="GridCell.Tab.0.right/0.0.1536.824/-1920.0.1920.1040@0.0.1536.824" timestamp="1621459849582" />
     <state x="361" y="145" key="Vcs.Push.Dialog.v2" timestamp="1621203544320">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
     <state x="361" y="145" key="Vcs.Push.Dialog.v2/0.0.1536.824/-1920.0.1920.1040@0.0.1536.824" timestamp="1621203544320" />
-    <state x="425" y="187" key="run.anything.popup" timestamp="1621385266205">
+    <state x="425" y="187" key="run.anything.popup" timestamp="1621459420200">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state x="425" y="187" key="run.anything.popup/0.0.1536.824/-1920.0.1920.1040@0.0.1536.824" timestamp="1621385266205" />
+    <state x="425" y="187" key="run.anything.popup/0.0.1536.824/-1920.0.1920.1040@0.0.1536.824" timestamp="1621459420200" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

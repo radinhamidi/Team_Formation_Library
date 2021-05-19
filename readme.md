@@ -89,6 +89,7 @@ The following diagram is a performance evaluation on the DBLP dataset.
 </p>
 
 ## End-to-end library dataflow
+The following data flow can be tested and run using the script in [Example.py](/teamFormationLibrary/example.py)
 ```python
     # Create an instance of the TeamFormationLayer
     TFL = TeamFormationLayer(database_name, database_path, embeddings_save_path)
@@ -101,7 +102,7 @@ The following diagram is a performance evaluation on the DBLP dataset.
     # 4 - Pass the data through the VAE
     TFL.generate_VAE()
     # 5 - Evaluate the results and compute correlation with another model
-    TFL.evaluate_results("output/predictions/S_VAE_O_output.csv", "output/predictions/S_VAE_O_output_2.csv", 50, True)
+    TFL.evaluate_results("output/predictions/S_VAE_O_output.csv", "output/predictions/correlation_baseline_output.csv", 50, True)
 ```
 ## Contributing
 
