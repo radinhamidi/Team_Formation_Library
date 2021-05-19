@@ -33,7 +33,7 @@ def main_team_formation():
     # TFL.train_test_split_data()
     # 4 - Pass the data through the VAE
     # TFL.generate_VAE()
-    # 5 - Evaluate the results
+    # 5 - Evaluate the results and compute correlation with another model
     TFL.evaluate_results("output/predictions/S_VAE_O_output.csv", "output/predictions/S_VAE_O_output_2.csv", 50, True)
 
 

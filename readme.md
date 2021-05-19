@@ -88,6 +88,21 @@ The following diagram is a performance evaluation on the DBLP dataset.
   <img width="320" height="240" src="https://i.ibb.co/6yN20PF/metric-fig.png">
 </p>
 
+## End-to-end library dataflow
+```python
+    # Create an instance of the TeamFormationLayer
+    TFL = TeamFormationLayer(database_name, database_path, embeddings_save_path)
+    # 1 - Generate dictionaries and embedding files
+    TFL.generate_embeddings()
+    # 2 - Create vectors to associate ids, teams, and skills
+    TFL.generate_t2v_dataset()
+    # 3 - Split the dataset into train and test sets
+    TFL.train_test_split_data()
+    # 4 - Pass the data through the VAE
+    TFL.generate_VAE()
+    # 5 - Evaluate the results and compute correlation with another model
+    TFL.evaluate_results("output/predictions/S_VAE_O_output.csv", "output/predictions/S_VAE_O_output_2.csv", 50, True)
+```
 ## Contributing
 
 This branch is submitted as a public library package on the PyPI API.
