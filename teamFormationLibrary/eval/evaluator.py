@@ -2,6 +2,15 @@ import numpy as np
 
 
 def find_indices(prediction, true, min_true=1):
+    """Extracts the prediction and training indices
+    ----------
+    prediction : array-like, shape=(predicted_indices,)
+        Extracts the predicted indices
+    true : array-like, shape=(true_indices,)
+        Extracts the true indices
+    min_true : integer, optional (default=1)
+        The minimum true valeus to be extracted
+    """
     preds = []
     trues = []
     for pred, t in zip(prediction, true):
@@ -19,16 +28,6 @@ def find_indices(prediction, true, min_true=1):
             preds.append(pred_indices)
             trues.append([int(t) for t in t_indices])
     return preds, trues
-
-
-def init_eval_holder(evaluation_k_set=None):
-    if evaluation_k_set is None:
-        evaluation_k_set = [10]
-
-    dict = {}
-    for k in evaluation_k_set:
-        dict[k] = []
-    return dict
 
 
 # #[u4, u1, u7, u2] va [u1, u2, u7]

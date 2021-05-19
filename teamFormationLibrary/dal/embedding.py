@@ -27,12 +27,18 @@ class Embedding:
         self.member_type = ''
 
     def get_database_name(self):
+        """Returns the database name provided by the user
+        """
         return self.database_name
 
     def get_database_path(self):
+        """Returns the database path provided by the user
+        """
         return self.databasePath
 
     def embeddings_save_path(self):
+        """Returns the embedding save path provided by the user
+        """
         return self.embeddings_save_path
 
     def init(self, team_matrix, member_type='user'):  # member_type={'user','skill'}
@@ -133,10 +139,24 @@ class Embedding:
             print('Model saved for {} under directory {}'.format(self.settings, output))
 
     def get_team_vec(self, tid):
+        """Returns the team data in vector format
+        Parameters
+        ----------
+        tid : integer
+            The unique ID associated with a specific team
+        """
         return self.model.docvecs[str(tid)]
 
     def load_model(self, modelfile, includeTeams=False):
-        self.model = gensim.models.Doc2Vec.load(modelfile) # load the doc2vec model
+        """Loads the TeamFormation gensim model
+        Parameters
+        ----------
+        modelfile : String
+            The t2v embedding model path
+        includeTeams : Boolean
+            Whether to include the teams or not
+        """
+        self.model = gensim.models.Doc2Vec.load(modelfile)  # load the doc2vec model
         if includeTeams:
             with open(modelfile.replace('model', 'teams'), 'rb') as f:
                 self.teams = pickle.load(f)

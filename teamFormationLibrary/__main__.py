@@ -26,9 +26,9 @@ def main_team_formation():
     # Create an instance of the TeamFormationLayer
     TFL = TeamFormationLayer(database_name, database_path, embeddings_save_path)
     # 1 - Generate dictionaries and embedding files
-    #TFL.generate_embeddings()
+    # TFL.generate_embeddings()
     # 2 - Create vectors to associate ids, teams, and skills
-    #TFL.generate_t2v_dataset()
+    # TFL.generate_t2v_dataset()
     # 3 - Split the dataset into train and test sets
     # TFL.train_test_split_data()
     # 4 - Pass the data through the VAE
