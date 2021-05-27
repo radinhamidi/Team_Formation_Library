@@ -1,5 +1,5 @@
 from teamFormationLibrary.util.variational import *
-import teamFormationLibrary.eval.evaluator as dblp_eval
+import teamFormationLibrary.eval.evaluation as dblp_eval
 
 from keras.losses import mse
 from keras.layers import Lambda
