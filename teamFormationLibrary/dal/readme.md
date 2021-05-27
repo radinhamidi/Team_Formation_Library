@@ -1,4 +1,4 @@
-# DAL Folder
+# Data Access Layer Folder
 This folder contains various sub-components of the Data Access Layer,
 mainly the Data Loader and the Embedding components. The Data Loader
 enables the loading of various files from local folders (i.e.user 
