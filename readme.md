@@ -67,7 +67,7 @@ Before starting the project you would need to preprocess your dataset to create 
 
 ### Output files
 
-[Output](/teamFormationLibrary/output) directory stores following data inside.
+[Output](/teamFormationLibrary/output) directory stores following data inside:
 - Model snapshots 
 - Predictions
 - Evaluation results
