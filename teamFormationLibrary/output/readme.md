@@ -5,7 +5,7 @@ diagrams folder contains a saved sample metric performance diagram. The
 Models folder contains various t2v generated sample models. The 
 prediction folder contains the predicted indices made by the VAE model.
 
-### DIAGRAM Folder
+### Diagram Folder
 This folder contains sample diagrams of the evaluation performance of the model.
 The measures that were computed include: Recall, MRR, MAP, and NDCG. The
 graph shows these measures over various top-k experts.
