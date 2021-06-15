@@ -2,9 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="83bb8fa4-3a42-4b46-84f2-60e4d1eb0ebf" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/teamFormationLibrary/VAE.py" beforeDir="false" afterPath="$PROJECT_DIR$/teamFormationLibrary/VAE.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/teamFormationLibrary/eval/evaluation.py" beforeDir="false" afterPath="$PROJECT_DIR$/teamFormationLibrary/eval/evaluation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/teamFormationLibrary/eval/evaluator.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -43,7 +42,7 @@
     <property name="settings.editor.selected.configurable" value="preferences.keymap" />
     <property name="show.migrate.to.gradle.popup" value="false" />
   </component>
-  <component name="RunManager" selected="Python.example">
+  <component name="RunManager" selected="Python.evaluation">
     <configuration name="__main__" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="teamFormationLibrary" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -110,8 +109,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.example" />
         <item itemvalue="Python.evaluation" />
+        <item itemvalue="Python.example" />
         <item itemvalue="Python.__main__" />
         <item itemvalue="Python.__main__" />
       </list>

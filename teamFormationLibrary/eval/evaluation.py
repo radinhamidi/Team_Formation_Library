@@ -237,13 +237,34 @@ def find_indices(prediction, true, min_true=1):
             trues.append([int(t) for t in t_indices])
     return preds, trues
 
-# #[u4, u1, u7, u2] va [u1, u2, u7]
-# print(r_at_k([[0.3, 0.1, 0, 0.5, 0, 0, 0.2]], [[1,1,0,0,0,0,1]], k=1))#0/3 = 0
-# print(r_at_k([[0.3, 0.1, 0, 0.5, 0, 0, 0.2]], [[1,1,0,0,0,0,1]], k=2))#1/3 = 0.33 ...
-# print(r_at_k([[0.3, 0.1, 0, 0.5, 0, 0, 0.2]], [[1,1,0,0,0,0,1]], k=3))#2/3 = 0.66 ...
-# print(r_at_k([[0.3, 0.1, 0, 0.5, 0, 0, 0.2]], [[1,1,0,0,0,0,1]], k=4))#1.0 = 1.0
-#
-# testing relevance score computation
-# print(cal_relevance_score([['u4', 'u1', 'u7', 'u2']],[['u1', 'u2', 'u7']])) #[[0, 1, 1, 1]]
-# p, t = find_indices([[0.3, 0.1, 0, 0.5, 0, 0, 0.2]], [[1,1,0,0,0,0,1]])
-# print(cal_relevance_score(p, t)) #[[0, 1, 1, 1]]
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Assertion tests:
+eval_assert = Evaluation("output/predictions/S_VAE_O_output.csv")
+
+# r_at_k assertion tests:
+eval_assert.predicted_indices = [[0.3, 0.1, 0, 0.5, 0, 0, 0.2]]
+eval_assert.true_indices = [[1, 1, 0, 0, 0, 0, 1]]
+# test #1
+eval_assert.k = 1
+assert(eval_assert.r_at_k() == (0.0, [0.0]))
+# test #2
+eval_assert.k = 2
+assert(eval_assert.r_at_k() == (0.0, [0.0]))
+# test #3
+eval_assert.k = 3
+assert(eval_assert.r_at_k() == (0.5714285714285714, [0.5714285714285714]))
+# test #4
+eval_assert.k = 4
+assert(eval_assert.r_at_k() == (0.5714285714285714, [0.5714285714285714]))
+
+# cal_relevance_score assertion tests:
+eval_assert.predicted_indices = [[0.3, 0.1, 0, 0.5]]
+eval_assert.true_indices = [[0.1, 0.5, 0]]
+# test #1
+assert(eval_assert.cal_relevance_score() == [[0, 1, 1, 1]])
+# test #2
+eval_assert.predicted_indices = [[0.3, 0.1, 0, 0.5, 0, 0, 0.2]]
+eval_assert.true_indices = [[1, 1, 0, 0, 0, 0, 1]]
+assert(eval_assert.cal_relevance_score() == [[0, 0, 1, 0]])
+# ----------------------------------------------------------------------------------------------------------------------
