@@ -1,4 +1,4 @@
-# Team Formation PyPI Tensorflow Python Library
+# Team Formation Python Library
 <p align="center">
   <img width="460" height="300" src="https://i.imgur.com/1W5Y4fU.png">
 </p>
