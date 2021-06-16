@@ -37,25 +37,11 @@ These are the python libraries you need to pre-install before using this package
 ```
 Python 3.6 (or higher)
 Tensorflow 1.15.0 (GPU preferred)
-tensorboard 1.15.0
-tensorboard-plugin-wit 1.7.0
-tensorflow-estimator 1.15.1
-tensorflow-probability 0.8.0
 Keras 2.0.0
-Keras-Applications
-Keras-Preprocessing 
 gensim
-iteration-utilities
-keras-metrics
-matplotlib
-ml-metrics
 NLTK 3.5
-numpy
-pandas
 scikit-learn
-scipy
 sklearn
-xlwt 
 ```
 ### Dataset
 We choose DBLP as the benchmark. However, you can use your own database in similar
