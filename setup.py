@@ -25,7 +25,7 @@ setup(
     ],
     packages=["teamFormationLibrary"],
     include_package_data=True,
-    install_requires=["tensorflow==1.15.0", "keras==2.0.0", "gensim", "nltk==3.5", "scikit-learn", "sklearn"],
+    install_requires=["tensorflow==2.5.1", "keras==2.0.0", "gensim", "nltk==3.5", "scikit-learn", "sklearn"],
     '''
     entry_points={
         "console_scripts": [
